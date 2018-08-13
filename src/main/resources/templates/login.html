@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html;charset=UTF-8"/>
+    <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
+    <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
+    <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
+    <title>Title</title>
+    <style type="text/css">
+        *{margin:0px;padding:0px;}
+        .el-header, .el-footer {
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: center;
+            line-height: 60px;
+        }
+
+        .el-aside {
+            background-color: #D3DCE6;
+            color: #333;
+            text-align: center;
+            line-height: 200px;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: center;
+            line-height: 160px;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+
+        .el-container:nth-child(5) .el-aside,
+        .el-container:nth-child(6) .el-aside {
+            line-height: 260px;
+        }
+
+        .el-container:nth-child(7) .el-aside {
+            line-height: 320px;
+        }
+    </style>
+</head>
+<body>
+<div id="appPanel">
+    <el-container id="container1">
+        <el-header><label th:text="${sysname}"></label></el-header>
+        <el-container>
+            <el-aside width="200px">Aside</el-aside>
+            <el-main>Main</el-main>
+        </el-container>
+    </el-container>
+</div>
+</body>
+</html>
+<script type="application/javascript">
+    var app=new Vue({
+        el:"#appPanel",
+        data:{
+
+        },
+        methods:{
+            initSize:function () {
+                var h =$(document).height() ;
+                $("#container1").css("height",h.toString()+"px");
+            }
+        }
+    });
+    app.initSize();
+</script>
