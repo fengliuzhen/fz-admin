@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html;charset=UTF-8"/>
+    <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
+    <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
+    <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
+    <title>Title</title>
+    <style type="text/css">
+        *{margin:0px;padding:0px;}
+        .el-header{
+            background-color:#4E97D9;
+            color: #ffffff;
+            text-align: left;
+            line-height: 60px;
+        }
+        .el-footer{
+            background-color: #B3C0D1;
+            color: #333;
+            text-align: center;
+            height:30px;
+            line-height: 30px;
+        }
+
+        .el-aside {
+            color: #ffffff;
+            text-align:left;
+        }
+
+        .el-main {
+            text-align:left;
+            padding:0px;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+        .el-tab-pane{
+            height:600px;
+        }
+        .el-container:nth-child(5) .el-aside,
+        .el-container:nth-child(6) .el-aside {
+            line-height: 260px;
+        }
+
+        .el-container:nth-child(7) .el-aside {
+            line-height: 320px;
+        }
+        .el-menu-vertical:not(.el-menu--collapse) {
+            width: 200px;
+            min-height: 400px;
+        }
+    </style>
+</head>
+<body>
+<div id="appPanel">
+    <el-container id="container1">
+        <el-header>
+            <label th:text="${sysname}"></label></el-header>
+        <el-container>
+            <el-aside style="background-color:#263238;overflow-x: hidden;overflow-y: auto;width: 200px;">
+                    <el-menu default-active="1"
+                             :unique-opened="IsUniqueOpen"
+                             background-color="#263238"
+                             text-color="#fff"
+                             active-text-color="#ffd04b"
+                             class="el-menu-vertical"
+                             @select="itemSelect"
+                    >
+                        <template v-for="(item , index) in firmenulist">
+                            <el-submenu :index="item.id">
+                                <template slot="title">
+                                    <i :class="item.icon"></i>
+                                    <span>{{item.menuname}}</span>
+                                </template>
+                                <el-menu-item v-for="(itemChild , index) in item.subitem"
+                                              :index="itemChild" style="padding-left:50px;">
+                                    <template slot="title">
+                                        <i class="el-icon-caret-right"></i>
+                                        {{itemChild.name}}
+                                    </template>
+                                </el-menu-item>
+                            </el-submenu>
+                        </template>
+                    </el-menu>
+            </el-aside>
+            <el-container>
+                <el-main>
+                    <el-tabs v-model="defTabIndex" type="card" @tab-remove="removeTab" @tab-click="clickTab">
+                        <el-tab-pane
+                                v-for="(item, index) in tabList"
+                                :key="item.name"
+                                :closable="item.showclose"
+                                v-html="item.content"
+                                :label="item.title"
+                                :name="item.name">
+                            {{item.content}}
+                        </el-tab-pane>
+                    </el-tabs>
+                </el-main>
+                <el-footer style="height:30px;font-size: 12px;">基于Vue+ElementUI开发后台管理模板 版本号：1.0.0</el-footer>
+            </el-container>
+        </el-container>
+    </el-container>
+</div>
+</body>
+</html>
+<script type="application/javascript">
+    var app=new Vue({
+        el:"#appPanel",
+        data:{
+            defTabIndex: '0',
+            tabIndex: 1,
+            IsUniqueOpen:true,
+            tabList: [{
+                title: '首页',
+                showclose:false,
+                name: '0',
+                content: '这里是首页的内容'
+            }],
+            firmenulist:[{
+                id:'1',
+                icon:'el-icon-menu',
+                menuname:'用户管理',
+                subitem:[{
+                    id:10,
+                    name:'用户列表',
+                    url:'/main/goods/list'
+                },
+                {
+                    id:11,
+                    name:'用户权限',
+                    url:'/main/goods/list'
+                }]
+            },{
+                id:'2',
+                icon:'el-icon-service',
+                menuname:'角色管理',
+                subitem:[{
+                    id:3,
+                    name:'角色列表',
+                    url:'/main/regionWare'
+                }]
+            }]
+        },
+        methods:{
+            itemSelect:function(key,keypath){
+
+                var tmpItem=key;
+                var tmpName=tmpItem.name;
+                var nextName="";
+                //先判断是否已经添加过此选项卡
+                $.each(this.tabList,function (i,tab) {
+                    if(tab.name==tmpItem.id) {
+                        nextName=tmpItem.id;
+                        return;
+                    }
+                });
+
+                if(nextName!="")
+                {
+                    this.defTabIndex=nextName;
+                    return;
+                }
+                //组装iframe
+                var contentIframe="<iframe frameborder=\"0\" width=\"100%\" height=\"100%\" class=\"f-iframe\" id=\"fiframe"+tmpItem.id+"\" name=\"fiframe"+tmpItem.id+"\"";
+                contentIframe+=" src=\""+tmpItem.url+"\"></iframe>";
+                this.tabList.push({
+                    showclose:true,
+                    title:tmpName,
+                    name: tmpItem.id,
+                    content:contentIframe
+                });
+                this.defTabIndex =tmpItem.id;
+                this.initPanelSize();
+            },
+            removeTab:function (targetName) {
+                var tabs = this.tabList;
+                var activeName = this.defTabIndex;
+                var tmpIndex=0;
+                //if (activeName == targetName) {
+                $.each(tabs,function (i,tab) {
+                    if(tab.name==targetName)
+                    {
+                        tmpIndex=i;
+                        var nextTab=tabs[i+1] ||tabs[i-1];
+                        if(nextTab)
+                        {
+                            activeName=nextTab.name;
+                            return;
+                        }
+                    }
+                });
+                //}
+                this.defTabIndex = activeName;
+                if(tmpIndex>0) {
+                    tabs.splice(tmpIndex,1);
+                    this.tabList = tabs;
+                }
+            },
+            clickTab:function (tabItem) {
+
+            },
+            initSize:function () {
+                var h =$(document).height();
+                $("#container1").css("height",h.toString()+"px");
+                $(".el-aside").css("max-height",(h-60).toString()+"px");
+            },
+            initPanelSize:function () {
+                var h =$(document).height();
+                $(".el-tab-pane").css("height",(h-151).toString()+"px");
+            }
+        }
+    });
+    app.initSize();
+    app.initPanelSize();
+</script>
