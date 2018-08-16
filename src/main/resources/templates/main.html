@@ -4,6 +4,7 @@
     <meta content="text/html;charset=UTF-8"/>
     <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
     <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
     <title>Title</title>
@@ -68,11 +69,11 @@
                              class="el-menu-vertical"
                              @select="itemSelect"
                     >
-                        <template v-for="(item , index) in firmenulist">
+                        <template v-for="(item , index) in menudata">
                             <el-submenu :index="item.id">
                                 <template slot="title">
                                     <i :class="item.icon"></i>
-                                    <span>{{item.menuname}}</span>
+                                    <span>{{item.name}}</span>
                                 </template>
                                 <el-menu-item v-for="(itemChild , index) in item.subitem"
                                               :index="itemChild" style="padding-left:50px;">
@@ -113,38 +114,24 @@
             defTabIndex: '0',
             tabIndex: 1,
             IsUniqueOpen:true,
+            bindMenuUrl:'/menulist',
             tabList: [{
                 title: '首页',
                 showclose:false,
                 name: '0',
                 content: '这里是首页的内容'
             }],
-            firmenulist:[{
-                id:'1',
-                icon:'el-icon-menu',
-                menuname:'用户管理',
-                subitem:[{
-                    id:10,
-                    name:'用户列表',
-                    url:'/main/goods/list'
-                },
-                {
-                    id:11,
-                    name:'用户权限',
-                    url:'/main/goods/list'
-                }]
-            },{
-                id:'2',
-                icon:'el-icon-service',
-                menuname:'角色管理',
-                subitem:[{
-                    id:3,
-                    name:'角色列表',
-                    url:'/main/regionWare'
-                }]
-            }]
+            menudata:[]
         },
         methods:{
+            loadMenuData:function(){
+                //动态获取数据
+                this.$http.get(this.bindMenuUrl).then(function(res2){
+                    this.menudata =res2.data;
+                },function(){
+                    console.log('failed');
+                });
+            },
             itemSelect:function(key,keypath){
 
                 var tmpItem=key;
@@ -215,4 +202,5 @@
     });
     app.initSize();
     app.initPanelSize();
+    app.loadMenuData();
 </script>
