@@ -25,6 +25,7 @@
 /.nb-gradle/
 mvnw
 mvnw.cmd
-.mvn
-.idea
-.git
+target/
+.mvn/
+.idea/
+.git/
