@@ -6,54 +6,144 @@
     <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
     <title>Title</title>
     <style type="text/css">
-        *{margin:0px;padding:0px;}
-        .el-header, .el-footer {
-            background-color: #B3C0D1;
-            color: #333;
-            text-align: center;
-            line-height: 60px;
+        *{
+            font: 13px/1.5 '微软雅黑', Verdana, Helvetica, Arial, sans-serif;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -box-sizing: border-box;
+            padding:0;
+            margin:0;
+            list-style:none;
+            box-sizing: border-box;
         }
 
-        .el-aside {
-            background-color: #D3DCE6;
-            color: #333;
-            text-align: center;
-            line-height: 200px;
+        body,html{
+            height:100%;
+            overflow:hidden;
+        }
+        body{
+            background:url(/images/web_login_bg.jpg) no-repeat center;
+            background-size: cover;
+        }
+        a{
+            color:#27A9E3;
+            text-decoration:none;
+            cursor:pointer;
+        }
+        .login{
+            margin: 150px auto 0 auto;
+            min-height: 420px;
+            max-width: 420px;
+            padding: 40px;
+            background-color: #ffffff;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 4px;
+            /* overflow-x: hidden; */
+            box-sizing: border-box;
+        }
+        a.logo{
+            display: block;
+            height: 58px;
+            width: 167px;
+            margin: 0 auto 30px auto;
+            background-size: 167px 42px;
+        }
+        .message {
+            margin: 10px 0 0 -58px;
+            padding: 18px 10px 18px 60px;
+            background: #337AB7;
+            position: relative;
+            font: 14px '微软雅黑', Verdana, Helvetica, Arial, sans-serif;
+            color: #fff;
+            font-size: 16px;
+        }
+        #darkbannerwrap {
+            background: url(/images/aiwrap.png);
+            width: 18px;
+            height: 10px;
+            margin: 0 0 20px -58px;
+            position: relative;
         }
 
-        .el-main {
-            background-color: #E9EEF3;
-            color: #333;
-            text-align: center;
-            line-height: 160px;
+        hr.hr15 {
+            height: 15px;
+            border: none;
+            margin: 0px;
+            padding: 0px;
+            width: 100%;
+        }
+        hr.hr20 {
+            height: 20px;
+            border: none;
+            margin: 0px;
+            padding: 0px;
+            width: 100%;
         }
 
-        body > .el-container {
-            margin-bottom: 40px;
+        .copyright{
+            font-size:14px;
+            color:rgba(255,255,255,0.85);
+            display:block;
+            position:absolute;
+            bottom:15px;
+            right:15px;
+        }
+        .form-control{
+            height:40px;}
+        .btn{
+            padding:10px 12px;
+            margin-top:30px;
+        }
+        .el-input-group__prepend
+        {
+            padding:0 10px;
+        }
+        :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+            color: #000000; opacity:1;
         }
 
-        .el-container:nth-child(5) .el-aside,
-        .el-container:nth-child(6) .el-aside {
-            line-height: 260px;
+        ::-moz-placeholder { /* Mozilla Firefox 19+ */
+            color: #000000;opacity:1;
         }
 
-        .el-container:nth-child(7) .el-aside {
-            line-height: 320px;
+        input:-ms-input-placeholder{
+            color: #000000;opacity:1;
+        }
+
+        input::-webkit-input-placeholder{
+            color: #000000;opacity:1;
         }
     </style>
 </head>
 <body>
 <div id="appPanel">
-    <el-container id="container1">
-        <el-header><label th:text="${sysname}"></label></el-header>
-        <el-container>
-            <el-aside width="200px">Aside</el-aside>
-            <el-main>Main</el-main>
-            <el-footer>Footer</el-footer>
-        </el-container>
-    </el-container>
+    <div class="login">
+        <div class="message">SpringBoot管理系统</div>
+        <div id="darkbannerwrap"></div>
+        <el-form :inline="true" :rules="rules" :model="formLogin" ref="formLogin" class="demo-form-inline">
+            <el-form-item label="" prop="loginName">
+                <el-input v-model.trim="formLogin.loginName" style="width:340px;" clearable placeholder="登录账号">
+                </el-input>
+            </el-form-item>
+            <el-form-item label="" prop="loginPwd">
+                <el-input v-model.trim="formLogin.loginPwd" type="password" style="width:340px;" clearable placeholder="登录密码">
+                </el-input>
+            </el-form-item>
+            <el-form-item label="" prop="loginCode">
+                <el-input v-model.trim="formLogin.loginCode" style="width:170px;" clearable placeholder="验证码">
+                </el-input>
+                <img  style="float:right;margin-left:20px;" width="130" height="40" id="kaptchaImage"  />
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" style="width:340px;background-color:#337AB7;" @click="login('formLogin')">登  录</el-button>
+            </el-form-item>
+        </el-form>
+    </div>
+    <div class="copyright">版权所有</div>
 </div>
 </body>
 </html>
@@ -61,14 +151,35 @@
     var app=new Vue({
         el:"#appPanel",
         data:{
-
+            formLogin: {
+                loginName: '',
+                loginPwd: '',
+                loginCode: ''
+            },
+            rules:{
+                loginName:[{ required: true, message: '请输入登录账号', trigger: 'blur' },
+                    { min:2, max:20, message: '长度在 2 到 20 个字符', trigger: 'change' }],
+                loginPwd:[{ required: true, message: '请输入密码', trigger: 'blur' },
+                    { min:4, max:20, message: '长度在 4 到 20 个字符', trigger: 'change' }],
+                loginCode:[{ required: true, message: '请输入验证码', trigger: 'blur' },
+                    { min:4, max:4, message: '长度为4个字符', trigger: 'change' }]
+            }
         },
         methods:{
-            initSize:function () {
-                var h =$(document).height() ;
-                $("#container1").css("height",h.toString()+"px");
+            login:function (formName) {
+                var isValidPass=true;
+                this.$refs[formName].validate(function (valid) {
+                    isValidPass=valid;
+                    if(!valid)
+                    {
+                        return false;
+                    }
+                });
+                if(!isValidPass)
+                {
+                    return false;
+                }
             }
         }
     });
-    app.initSize();
 </script>

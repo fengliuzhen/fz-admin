@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html;charset=UTF-8"/>
+    <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
+    <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
+    <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
+    <title>Title</title>
+</head>
+<body>
+<div id="listPanel">
+    <el-button type="text" @click="testShowDialog">点击打开 Dialog</el-button>
+    <label th:text="${sid}"></label>
+<el-table
+        :data="tableData"
+        stripe
+        highlight-current-row
+        border
+        style="width: 100%">
+    <el-table-column
+            prop="id"
+            label="id"
+            width="180">
+    </el-table-column>
+    <el-table-column
+            prop="name"
+            label="name"
+            width="180">
+    </el-table-column>
+    <el-table-column
+            prop="icon"
+            label="icon">
+    </el-table-column>
+</el-table>
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pager.currentPage"
+            :page-sizes="[5,10,20,30]"
+            :page-size="pager.pageSize"
+            background="#409EFF"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pager.totalCount">
+    </el-pagination>
+</div>
+</body>
+</html>
+<script type="application/javascript">
+    var listApp=new Vue({
+        el:"#listPanel",
+        data:{
+            tableData: [],
+            pager:{
+                pageSize:10,
+                currentPage:1,
+                totalCount:0
+            }
+        },
+        methods:{
+            loadListData:function () {
+                var searchParam={pageNum:this.pager.currentPage,pageSize:this.pager.pageSize};
+                this.$http.post("/search/list",searchParam).then(function(res){
+                    this.tableData = res.body.datalist;
+                    this.pager.totalCount = res.body.totalcount;
+                },function(){
+                    console.log('failed');
+                });
+            },
+            handleSizeChange: function(currenPageSize) {
+                this.pager.pageSize=currenPageSize;
+                this.loadListData();
+            },
+            handleCurrentChange: function(currenPageSize) {
+                this.pager.currentPage=currenPageSize;
+                this.loadListData();
+            },
+            testShowDialog:function () {
+                parent.ShowDialog("test标题","内容");
+            }
+        }
+    });
+    listApp.loadListData();
+</script>

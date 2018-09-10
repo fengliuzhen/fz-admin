@@ -58,7 +58,26 @@
 <div id="appPanel">
     <el-container id="container1">
         <el-header>
-            <label th:text="${sysname}"></label></el-header>
+            <el-row :gutter="20">
+                <el-col :span="6"><div class="grid-content bg-purple"><label th:text="${sysname}"></label></div></el-col>
+                <el-col :span="6"><div class="grid-content bg-purple">&nbsp;</div></el-col>
+                <el-col :span="6"><div class="grid-content bg-purple">&nbsp;</div></el-col>
+                <el-col :span="6">
+                    <div class="grid-content bg-purple">
+                        <el-dropdown trigger="click" style="float:right;" @command="selectItem">
+                          <span class="el-dropdown-link" style="color: #ffffff;cursor: pointer;">
+                            超级管理员<i class="el-icon-arrow-down el-icon--right"></i>
+                          </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item command="1">修改密码</el-dropdown-item>
+                                <el-dropdown-item command="2">个人信息</el-dropdown-item>
+                                <el-dropdown-item command="3">退出</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </div>
+                </el-col>
+            </el-row>
+            </el-header>
         <el-container>
             <el-aside style="background-color:#263238;overflow-x: hidden;overflow-y: auto;width: 200px;">
                     <el-menu default-active="1"
@@ -76,7 +95,7 @@
                                     <span>{{item.name}}</span>
                                 </template>
                                 <el-menu-item v-for="(itemChild , index) in item.subitem"
-                                              :index="itemChild" style="padding-left:50px;">
+                                              :index="itemChild" style="padding-left:40px;">
                                     <template slot="title">
                                         <i class="el-icon-caret-right"></i>
                                         {{itemChild.name}}
@@ -104,6 +123,19 @@
             </el-container>
         </el-container>
     </el-container>
+    <el-dialog
+            :title="dialogTitle"
+            :visible.sync="dialogVisible"
+            :show-close="false"
+            :close-on-click-modal="false"
+            width="30%"
+            :before-close="handleClose">
+        <span>这是一段信息</span>
+        <span slot="footer" class="dialog-footer">
+    <el-button @click="dialogVisible = false">取 消</el-button>
+    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+  </span>
+    </el-dialog>
 </div>
 </body>
 </html>
@@ -111,7 +143,9 @@
     var app=new Vue({
         el:"#appPanel",
         data:{
+            dialogVisible:false,
             defTabIndex: '0',
+            dialogTitle:"标题",
             tabIndex: 1,
             IsUniqueOpen:true,
             bindMenuUrl:'/menulist',
@@ -128,12 +162,12 @@
                 //动态获取数据
                 this.$http.get(this.bindMenuUrl).then(function(res2){
                     this.menudata =res2.data;
+                    this.showMsg("提示","菜单加载完成");
                 },function(){
                     console.log('failed');
                 });
             },
             itemSelect:function(key,keypath){
-
                 var tmpItem=key;
                 var tmpName=tmpItem.name;
                 var nextName="";
@@ -186,8 +220,40 @@
                     this.tabList = tabs;
                 }
             },
+            selectItem:function(command){
+                if(command=="3") {
+                    this.$confirm('确定要退出系统吗?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        showClose: false,
+                        closeOnClickModal: false,
+                        closeOnPressEscape: false,
+                        type: 'warning',
+                        callback: function (action, instance) {
+                            if (action == "confirm") {
+                                window.location.href="/login";
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    this.$message({
+                        message: '功能开发中。。。',
+                        type: 'success'
+                    });
+                }
+            },
             clickTab:function (tabItem) {
 
+            },
+            showMsg:function (msgTitle,msgContent) {
+                this.$notify({
+                    title:msgTitle,
+                    message:msgContent,
+                    type:'success',
+                    position: 'bottom-right'
+                });
             },
             initSize:function () {
                 var h =$(document).height();
@@ -197,10 +263,20 @@
             initPanelSize:function () {
                 var h =$(document).height();
                 $(".el-tab-pane").css("height",(h-151).toString()+"px");
+            },
+            openDialog:function (_title,_content) {
+                this.dialogTitle=_title;
+                this.dialogVisible = true;
+            },
+            handleClose:function (_done) {
+                
             }
         }
     });
     app.initSize();
     app.initPanelSize();
     app.loadMenuData();
+function ShowDialog(title,content) {
+    app.openDialog(title,content);
+}
 </script>
