@@ -7,7 +7,7 @@
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
     <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
-    <title>Title</title>
+    <title th:text="${sysname}+'-登录'"></title>
     <style type="text/css">
         *{
             font: 13px/1.5 '微软雅黑', Verdana, Helvetica, Arial, sans-serif;
@@ -122,7 +122,7 @@
 <body>
 <div id="appPanel">
     <div class="login">
-        <div class="message">SpringBoot管理系统</div>
+        <div class="message"><label th:text="${sysname}"></label></div>
         <div id="darkbannerwrap"></div>
         <el-form :inline="true" :rules="rules" :model="formLogin" ref="formLogin" class="demo-form-inline">
             <el-form-item label="" prop="loginName">
@@ -136,14 +136,14 @@
             <el-form-item label="" prop="loginCode">
                 <el-input v-model.trim="formLogin.loginCode" style="width:170px;" clearable placeholder="验证码">
                 </el-input>
-                <img  style="float:right;margin-left:20px;" width="130" height="40" id="kaptchaImage"  />
+                <img  style="float:right;margin-left:20px;" width="130" height="40" id="kaptchaImage" @click="refreshvm" th:src="@{/validcode(r=${imgr})}" />
             </el-form-item>
             <el-form-item>
                 <el-button type="primary" style="width:340px;background-color:#337AB7;" @click="login('formLogin')">登  录</el-button>
             </el-form-item>
         </el-form>
     </div>
-    <div class="copyright">版权所有</div>
+    <div class="copyright">版权所有flz</div>
 </div>
 </body>
 </html>
@@ -151,6 +151,7 @@
     var app=new Vue({
         el:"#appPanel",
         data:{
+            loginurl:'/postlogin',
             formLogin: {
                 loginName: '',
                 loginPwd: '',
@@ -179,6 +180,23 @@
                 {
                     return false;
                 }
+                var loginData={"username":this.formLogin.loginName,"password":this.formLogin.loginPwd,"loginCode":this.formLogin.loginCode};
+                this.$http.post(this.loginurl,loginData).then(function(dataRet){
+                    if(dataRet.body.code=="1000"){
+                        window.location="/main";
+                    }
+                    else{
+                        this.refreshvm();
+                        this.formLogin.loginCode="";
+                        alert(dataRet.body.message);
+                    }
+                },function(){
+                    console.log('failed');
+                    this.refreshvm();
+                });
+            },
+            refreshvm:function () {
+                $("#kaptchaImage").attr("src","/validcode?r="+(new Date()).getTime());
             }
         }
     });

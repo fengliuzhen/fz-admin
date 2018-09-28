@@ -7,7 +7,7 @@
     <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
-    <title>Title</title>
+    <title th:text="${sysname}"></title>
     <style type="text/css">
         *{margin:0px;padding:0px;}
         .el-header{
@@ -66,7 +66,8 @@
                     <div class="grid-content bg-purple">
                         <el-dropdown trigger="click" style="float:right;" @command="selectItem">
                           <span class="el-dropdown-link" style="color: #ffffff;cursor: pointer;">
-                            超级管理员<i class="el-icon-arrow-down el-icon--right"></i>
+                            <label th:text="${'欢迎您，'+adminname}"></label>
+                              <i class="el-icon-arrow-down el-icon--right"></i>
                           </span>
                             <el-dropdown-menu slot="dropdown">
                                 <el-dropdown-item command="1">修改密码</el-dropdown-item>

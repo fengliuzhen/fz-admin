@@ -16,7 +16,8 @@ public class MainController extends BaseController {
     @RequestMapping(value = "/main",method = RequestMethod.GET)
     public String main(Model model)
     {
-        model.addAttribute("sysname","ERP管理系统");
+        model.addAttribute("sysname","权限管理系统");
+        model.addAttribute("adminname","超级管理员");
         return "main";
     }
 
@@ -28,30 +29,43 @@ public class MainController extends BaseController {
 
         Menu menu=new Menu();
         menu.setId(1);
-        menu.setName("用户管理");
+        menu.setName("组织架构管理");
         menu.setIcon("el-icon-menu");
 
         List<Menu> subMenuList=new ArrayList<>();
 
         Menu subMenu=new Menu();
         subMenu.setId(11);
-        subMenu.setName("用户列表");
-        subMenu.setUrl("/list");
+        subMenu.setName("部门管理");
+        subMenu.setUrl("/organization/deptlist");
+
         Menu subMenu2=new Menu();
         subMenu2.setId(12);
-        subMenu2.setName("权限列表");
-        subMenu2.setUrl("http://www.baidu.com");
+        subMenu2.setName("岗位管理");
+        subMenu2.setUrl("/organization/postlist");
 
         subMenuList.add(subMenu);
         subMenuList.add(subMenu2);
         menu.setSubitem(subMenuList);
         menus.add(menu);
 
+        List<Menu> subMenuList2=new ArrayList<>();
         Menu menu2=new Menu();
         menu2.setId(2);
-        menu2.setName("角色管理");
+        menu2.setName("角色权限管理");
         menu2.setIcon("el-icon-menu");
+
+
+        Menu subMenu3=new Menu();
+        subMenu3.setId(13);
+        subMenu3.setName("角色管理");
+        subMenu3.setUrl("/role/list");
+
+        subMenuList2.add(subMenu3);
+        menu2.setSubitem(subMenuList2);
         menus.add(menu2);
+
+
         return menus;
     }
 
