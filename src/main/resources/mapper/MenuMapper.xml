@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fz.admin.dao.MenuDao">
+    <select id="getMenuListByUid"  resultType="com.fz.admin.entity.Menu" parameterType="java.lang.Integer">
+        SELECT sm.id,sm.menuname name,sm.parentid pid,sm.icon,sm.path url FROM sys_user_role sur LEFT JOIN sys_role sr ON sur.roleid=sr.id
+  LEFT JOIN sys_role_menu srm ON sr.id=srm.roleid
+  LEFT JOIN sys_menu sm ON srm.menuid=sm.id
+  WHERE sur.datastate=1 AND srm.datastate=1 AND sm.datastate=1
+AND sm.showtype=0 AND sur.userid=#{uid,jdbcType=INTEGER} GROUP BY sm.id
+    </select>
+    <select id="getIsHavePower" resultType="java.lang.Integer" parameterType="java.util.Map">
+        SELECT sm.id FROM sys_user_role sur LEFT JOIN sys_role_menu srm ON sur.roleid=srm.roleid
+  LEFT JOIN sys_menu sm ON srm.menuid=sm.id
+  WHERE sur.datastate=1 AND srm.datastate=1 AND sm.datastate=1
+  AND sur.userid=#{userId,jdbcType=INTEGER} AND sm.path=#{menuPath,jdbcType=VARCHAR};
+    </select>
+</mapper>

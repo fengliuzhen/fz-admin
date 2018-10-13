@@ -1,6 +1,7 @@
 package com.fz.admin.auth;
 
-import com.fz.admin.Service.RedisService;
+import com.fz.admin.service.MenuService;
+import com.fz.admin.service.RedisService;
 import com.fz.admin.core.ConvertCore;
 import com.fz.admin.core.CookieCore;
 import com.fz.admin.core.SystemEnum;
@@ -13,6 +14,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.swing.table.TableRowSorter;
+import java.util.Objects;
 
 public class Interceptor implements HandlerInterceptor {
     //监控加载 时间
@@ -24,24 +27,48 @@ public class Interceptor implements HandlerInterceptor {
     @Autowired
     private RedisService redisService;
 
+    @Autowired
+    private MenuService menuService;
+
     /**
      * controller 执行之前调用
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        long beginTime = System.currentTimeMillis();//1、开始时间
         //判断Session是否为空
         String tmpSessionId= CookieCore.initLoginCookie(request,response);
-        String objSession=redisService.get(SystemEnum.Admin_Sid.getValue()+tmpSessionId);
+        String objSession=redisService.rget(SystemEnum.Admin_Sid.getValue()+tmpSessionId);
         int adminId= ConvertCore.ObjToInt(objSession);
         if(adminId<=0){
+            redisService.remove(SystemEnum.Admin_Sid.getValue()+tmpSessionId);
             response.sendRedirect("/login");
+            beginTime = System.currentTimeMillis();//1、开始时间
+            startTimeThreadLocal.set(beginTime);//线程绑定变量（该数据只有当前请求的线程可见）
             return false;
         }
         else
         {
             //判断权限
+            String servletPath=request.getServletPath();
+            //过滤要验证权限的路径
+            if(Objects.equals(servletPath.toLowerCase().contains("/menupath/"),false))
+            {
+                beginTime = System.currentTimeMillis();//1、开始时间
+                startTimeThreadLocal.set(beginTime);//线程绑定变量（该数据只有当前请求的线程可见）
+                return true;
+            }
+            Integer mid=menuService.getIsHavePower(adminId,servletPath);
+            if(Objects.equals(mid,null)||mid<=0)
+            {
+                //无权限，跳转
+                response.sendRedirect("/nopower");
+                beginTime = System.currentTimeMillis();//1、开始时间
+                startTimeThreadLocal.set(beginTime);//线程绑定变量（该数据只有当前请求的线程可见）
+                return false;
+            }
         }
-        long beginTime = System.currentTimeMillis();//1、开始时间
+        beginTime = System.currentTimeMillis();//1、开始时间
         startTimeThreadLocal.set(beginTime);//线程绑定变量（该数据只有当前请求的线程可见）
         return true;
     }

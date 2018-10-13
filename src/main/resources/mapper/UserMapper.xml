@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fz.admin.dao.UserDao">
+    <select id="getLoginInfo"  resultType="com.fz.admin.entity.UserEntity" parameterType="java.util.Map">
+        SELECT su.id userId,su.username,su.realname,su.email,su.islock,su.mobile,su.deptid,sd.deptname,GROUP_CONCAT(sp.postname) postname
+FROM sys_user su LEFT JOIN sys_department sd ON su.deptid=sd.id
+LEFT JOIN sys_user_post sup ON su.id=sup.userid
+  LEFT JOIN sys_post sp ON sup.postid=sp.id
+WHERE su.username=#{userName,jdbcType=VARCHAR} AND su.password=#{passWord,jdbcType=VARCHAR} limit 1
+    </select>
+    <select id="getUserBaseInfo"  resultType="com.fz.admin.entity.UserEntity" parameterType="java.lang.Integer">
+        SELECT su.id userId,su.username,su.realname,su.email,su.islock,su.mobile,su.deptid,sd.deptname,GROUP_CONCAT(sp.postname) postname
+FROM sys_user su LEFT JOIN sys_department sd ON su.deptid=sd.id
+LEFT JOIN sys_user_post sup ON su.id=sup.userid
+  LEFT JOIN sys_post sp ON sup.postid=sp.id
+ WHERE su.id=#{userId,jdbcType=INTEGER} limit 1
+    </select>
+</mapper>

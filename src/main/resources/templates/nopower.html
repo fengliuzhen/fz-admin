@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html;charset=UTF-8"/>
+    <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
+    <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
+    <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
+    <title>无权限</title>
+</head>
+<body>
+<div id="bodyPanel">
+    <el-row>
+        <el-col :span="24"><div class="grid-content bg-purple-dark" style="text-align: center;">
+            <el-button type="info" icon="el-icon-warning">您没有系统权限</el-button>
+        </div></el-col>
+    </el-row>
+</div>
+</body>
+</html>
+<script type="application/javascript">
+    var powerVM=new Vue({
+        el:"#bodyPanel",
+        data: {
+
+        },
+        methods:{
+
+        }
+    });
+</script>

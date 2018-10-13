@@ -5,8 +5,28 @@ import java.util.List;
 public class Menu {
     private int id;
     private String name;
+
+    public int getPid() {
+        return pid;
+    }
+
+    public void setPid(int pid) {
+        this.pid = pid;
+    }
+
+    private int pid;
     private String icon;
     private String url;
+
+    public int getOrderNo() {
+        return orderNo;
+    }
+
+    public void setOrderNo(int orderNo) {
+        this.orderNo = orderNo;
+    }
+
+    private int orderNo;
 
     public List<Menu> getSubitem() {
         return subitem;

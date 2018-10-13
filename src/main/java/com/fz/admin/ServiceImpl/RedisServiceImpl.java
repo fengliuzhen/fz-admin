@@ -1,6 +1,6 @@
-package com.fz.admin.ServiceImpl;
+package com.fz.admin.serviceImpl;
 
-import com.fz.admin.Service.RedisService;
+import com.fz.admin.service.RedisService;
 import com.fz.admin.core.JsonCore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -30,7 +30,7 @@ public class RedisServiceImpl implements RedisService {
         redisTemplate.opsForValue().set(key, JsonCore.toJson(obj), timeout, unit);
     }
 
-    public <T> T get(String key, Class<T> cls) {
+    public <T> T rget(String key, Class<T> cls) {
         return JsonCore.fromJson(redisTemplate.opsForValue().get(key),cls);
     }
 
@@ -38,7 +38,7 @@ public class RedisServiceImpl implements RedisService {
         return redisTemplate.hasKey(key);
     }
 
-    public void delete(String key) {
+    public void remove(String key) {
         redisTemplate.delete(key);
     }
 
@@ -63,7 +63,7 @@ public class RedisServiceImpl implements RedisService {
     }
 
 
-    public String get(String key) {
+    public String rget(String key) {
         return redisTemplate.opsForValue().get(key);
     }
 }

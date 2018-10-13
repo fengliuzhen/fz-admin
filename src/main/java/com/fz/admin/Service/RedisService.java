@@ -1,4 +1,4 @@
-package com.fz.admin.Service;
+package com.fz.admin.service;
 
 import java.util.concurrent.TimeUnit;
 
@@ -19,11 +19,11 @@ public interface RedisService {
     <T> void put(String key, T obj, int timeout);
     <T> void put(String key, T obj, int timeout, TimeUnit unit);
 
-    <T> T get(String key, Class<T> cls);
+    <T> T rget(String key, Class<T> cls);
 
     boolean exists(String key);
 
-    void delete(String key);
+    void remove(String key);
 
     boolean expire(String key, long timeout, TimeUnit timeUnit);
     boolean expire(String key, long timeout);
@@ -32,5 +32,5 @@ public interface RedisService {
     void put(String key, String value, int timeout);
     void put(String key, String value, int timeout, TimeUnit unit);
 
-    String get(String key);
+    String rget(String key);
 }

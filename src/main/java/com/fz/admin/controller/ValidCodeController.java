@@ -1,6 +1,6 @@
 package com.fz.admin.controller;
 
-import com.fz.admin.Service.RedisService;
+import com.fz.admin.service.RedisService;
 import com.fz.admin.core.CookieCore;
 import com.fz.admin.core.SystemEnum;
 import org.springframework.beans.factory.annotation.Autowired;

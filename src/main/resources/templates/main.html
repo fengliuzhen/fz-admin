@@ -59,22 +59,27 @@
     <el-container id="container1">
         <el-header>
             <el-row :gutter="20">
-                <el-col :span="6"><div class="grid-content bg-purple"><label th:text="${sysname}"></label></div></el-col>
-                <el-col :span="6"><div class="grid-content bg-purple">&nbsp;</div></el-col>
+                <el-col :span="3"><div class="grid-content bg-purple"><label th:text="${sysname}" style="color: #ffffff;font-size: 14px;"></label></div></el-col>
+                <el-col :span="9">
+                    <div class="grid-content bg-purple">
+                    <el-dropdown trigger="click" style="float:left;" @command="selectItem">
+                          <span class="el-dropdown-link" style="color: #ffffff;cursor:pointer;">
+                            <label style="color: #ffffff;cursor:pointer;" th:text="${'欢迎您，'+adminname}"></label>
+                              <i class="el-icon-arrow-down el-icon--right"></i>
+                          </span>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item command="1">修改密码</el-dropdown-item>
+                        <el-dropdown-item command="2">个人信息</el-dropdown-item>
+                        <el-dropdown-item command="3">退出</el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
+                        &nbsp;&nbsp;<label style="color: #ffffff;font-size: 14px;" th:text="${'岗位【'+postname+'】，部门【'+deptname+'】'}"></label>
+                    </div>
+                </el-col>
                 <el-col :span="6"><div class="grid-content bg-purple">&nbsp;</div></el-col>
                 <el-col :span="6">
                     <div class="grid-content bg-purple">
-                        <el-dropdown trigger="click" style="float:right;" @command="selectItem">
-                          <span class="el-dropdown-link" style="color: #ffffff;cursor: pointer;">
-                            <label th:text="${'欢迎您，'+adminname}"></label>
-                              <i class="el-icon-arrow-down el-icon--right"></i>
-                          </span>
-                            <el-dropdown-menu slot="dropdown">
-                                <el-dropdown-item command="1">修改密码</el-dropdown-item>
-                                <el-dropdown-item command="2">个人信息</el-dropdown-item>
-                                <el-dropdown-item command="3">退出</el-dropdown-item>
-                            </el-dropdown-menu>
-                        </el-dropdown>
+
                     </div>
                 </el-col>
             </el-row>
@@ -98,7 +103,7 @@
                                 <el-menu-item v-for="(itemChild , index) in item.subitem"
                                               :index="itemChild" style="padding-left:40px;">
                                     <template slot="title">
-                                        <i class="el-icon-caret-right"></i>
+                                        <i :class="itemChild.icon"></i>
                                         {{itemChild.name}}
                                     </template>
                                 </el-menu-item>
@@ -176,6 +181,8 @@
                 $.each(this.tabList,function (i,tab) {
                     if(tab.name==tmpItem.id) {
                         nextName=tmpItem.id;
+                        //刷新
+                        $('fiframe'+tmpItem.id).attr('src', $('fiframe'+tmpItem.id).attr('src'));
                         return;
                     }
                 });

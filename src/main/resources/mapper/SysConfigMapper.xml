@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fz.admin.dao.SysConfigDao">
+    <select id="getEntityById"  resultType="com.fz.admin.entity.SysConfig" parameterType="java.lang.Integer">
+        SELECT sc.id,sc.itemkey,sc.itemval,sc.remark FROM sys_config sc WHERE sc.id=#{id,jdbcType=INTEGER};
+    </select>
+    <select id="getEntityByKey"  resultType="com.fz.admin.entity.SysConfig" parameterType="java.lang.String">
+        SELECT sc.id,sc.itemkey,sc.itemval,sc.remark FROM sys_config sc WHERE sc.itemkey=#{itemKey,jdbcType=VARCHAR} limit 1;
+    </select>
+</mapper>

@@ -134,7 +134,7 @@
                 </el-input>
             </el-form-item>
             <el-form-item label="" prop="loginCode">
-                <el-input v-model.trim="formLogin.loginCode" style="width:170px;" clearable placeholder="验证码">
+                <el-input v-model.trim="formLogin.loginCode" style="width:170px;" clearable placeholder="验证码" @keyup.enter.native="login('formLogin')">
                 </el-input>
                 <img  style="float:right;margin-left:20px;" width="130" height="40" id="kaptchaImage" @click="refreshvm" th:src="@{/validcode(r=${imgr})}" />
             </el-form-item>

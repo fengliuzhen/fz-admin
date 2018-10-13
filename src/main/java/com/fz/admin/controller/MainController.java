@@ -1,7 +1,16 @@
 package com.fz.admin.controller;
 
+import com.fz.admin.core.CookieCore;
+import com.fz.admin.core.SystemEnum;
 import com.fz.admin.entity.Menu;
+import com.fz.admin.entity.SysConfig;
+import com.fz.admin.entity.UserEntity;
+import com.fz.admin.service.MenuService;
+import com.fz.admin.service.RedisService;
+import com.fz.admin.service.SysConfigService;
 import com.github.pagehelper.PageInfo;
+import com.google.common.base.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,86 +22,43 @@ import java.util.*;
 
 @Controller
 public class MainController extends BaseController {
+
+    @Autowired
+    private SysConfigService sysConfigService;
+
+    @Autowired
+    private MenuService menuService;
+
+    @Autowired
+    private RedisService redisService;
+
     @RequestMapping(value = "/main",method = RequestMethod.GET)
-    public String main(Model model)
+    public String main(Model model) throws Exception
     {
-        model.addAttribute("sysname","权限管理系统");
-        model.addAttribute("adminname","超级管理员");
+        SysConfig sysConfig=sysConfigService.getEntityByKey("sysname");
+        model.addAttribute("sysname",Objects.equals(sysConfig,null)?"管理系统":sysConfig.getItemVal());
+        //获取用户信息
+        UserEntity userEntity=GetCureenUser();
+        if(Objects.equals(userEntity,null))
+        {
+            String tmpSessionId= CookieCore.initLoginCookie(request,response);
+            if(tmpSessionId!=null&&!tmpSessionId.isEmpty())
+            {
+                //清除session值
+                redisService.remove(SystemEnum.Admin_Sid.getValue()+tmpSessionId);
+            }
+            //重新登录
+            response.sendRedirect("/login");
+        }
+        model.addAttribute("adminname",userEntity.getRealName());
+        model.addAttribute("deptname",userEntity.getDeptName());
+        model.addAttribute("postname",userEntity.getPostName());
         return "main";
     }
-
     @RequestMapping(value = "/menulist",method = RequestMethod.GET,produces = "application/json")
     @ResponseBody
-    public List<Menu> getMenuList()
-    {
-        List<Menu> menus=new ArrayList<>();
-
-        Menu menu=new Menu();
-        menu.setId(1);
-        menu.setName("组织架构管理");
-        menu.setIcon("el-icon-menu");
-
-        List<Menu> subMenuList=new ArrayList<>();
-
-        Menu subMenu=new Menu();
-        subMenu.setId(11);
-        subMenu.setName("部门管理");
-        subMenu.setUrl("/organization/deptlist");
-
-        Menu subMenu2=new Menu();
-        subMenu2.setId(12);
-        subMenu2.setName("岗位管理");
-        subMenu2.setUrl("/organization/postlist");
-
-        subMenuList.add(subMenu);
-        subMenuList.add(subMenu2);
-        menu.setSubitem(subMenuList);
-        menus.add(menu);
-
-        List<Menu> subMenuList2=new ArrayList<>();
-        Menu menu2=new Menu();
-        menu2.setId(2);
-        menu2.setName("角色权限管理");
-        menu2.setIcon("el-icon-menu");
-
-
-        Menu subMenu3=new Menu();
-        subMenu3.setId(13);
-        subMenu3.setName("角色管理");
-        subMenu3.setUrl("/role/list");
-
-        subMenuList2.add(subMenu3);
-        menu2.setSubitem(subMenuList2);
-        menus.add(menu2);
-
-
-        return menus;
-    }
-
-    @RequestMapping(value = "/list",method = RequestMethod.GET)
-    public String list(Model model)
-    {
-        String sid=request.getSession().getId();
-        model.addAttribute("sid",sid);
-        return "list";
-    }
-    @RequestMapping(value = "/search/list",method = RequestMethod.POST,consumes = "application/json")
-    @ResponseBody
-    public Map<String, Object> searchList(@RequestBody Map<String,Object> paramMap)
-    {
-        PageInfo<Menu> page=new PageInfo();
-        List<Menu> menus=new ArrayList<>();
-        Menu menu=new Menu();
-        menu.setId(1);
-        menu.setName("用户管理");
-        menu.setIcon("el-icon-menu");
-        menus.add(menu);
-
-        page.setList(menus);
-        page.setTotal(30);
-        Map<String, Object> map = new HashMap();
-        map.put("datalist", page.getList());
-        map.put("totalcount", page.getTotal());
-        return map;
+    public List<Menu> getMenuList() {
+        List<Menu> menuList = menuService.getMenuListByUid(getUserId());
+        return menuList;
     }
 }

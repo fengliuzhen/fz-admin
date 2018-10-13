@@ -652,7 +652,7 @@
     }
 
     /**
-     * Service for URL templating.
+     * service for URL templating.
      */
 
     function Url(url, params) {
@@ -1364,7 +1364,7 @@
     };
 
     /**
-     * Service for sending network requests.
+     * service for sending network requests.
      */
 
     var COMMON_HEADERS = {'Accept': 'application/json, text/plain, */*'};
@@ -1433,7 +1433,7 @@
     });
 
     /**
-     * Service for interacting with RESTful services.
+     * service for interacting with RESTful services.
      */
 
     function Resource(url, params, actions, options$$1) {
