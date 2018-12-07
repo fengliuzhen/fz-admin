@@ -1,21 +1,44 @@
 package com.fz.admin.entity;
 
-import java.io.Serializable;
-import java.util.Date;
-
-public class UserEntity extends PageParams implements Serializable  {
+public class AddUserEntity {
     private int userId;
     private String userName;
     private String realName;
+    private String passWord;
+
+    public String getPassWord() {
+        return passWord;
+    }
+
+    public void setPassWord(String passWord) {
+        this.passWord = passWord;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public int getSex() {
+        return sex;
+    }
+
+    public void setSex(int sex) {
+        this.sex = sex;
+    }
+
+    private int age;
+    private int sex;
     private int isLock;
     private String email;
     private String mobile;
     private int deptId;
-    private String deptName;
     private int dataState;
-    private String postName;
-    private Date addTime;
-    private Date lastEditTime;
+    private int addTime;
+    private int addUid;
     private String remark;
 
     public int getDataState() {
@@ -26,20 +49,20 @@ public class UserEntity extends PageParams implements Serializable  {
         this.dataState = dataState;
     }
 
-    public Date getAddTime() {
+    public int getAddTime() {
         return addTime;
     }
 
-    public void setAddTime(Date addTime) {
+    public void setAddTime(int addTime) {
         this.addTime = addTime;
     }
 
-    public Date getLastEditTime() {
-        return lastEditTime;
+    public int getAddUid() {
+        return addUid;
     }
 
-    public void setLastEditTime(Date lastEditTime) {
-        this.lastEditTime = lastEditTime;
+    public void setAddUid(int addUid) {
+        this.addUid = addUid;
     }
 
     public String getRemark() {
@@ -49,26 +72,11 @@ public class UserEntity extends PageParams implements Serializable  {
     public void setRemark(String remark) {
         this.remark = remark;
     }
-    public String getPostName() {
-        return postName;
-    }
-
-    public void setPostName(String postName) {
-        this.postName = postName;
-    }
-
-
     public int getDeptId() {
         return deptId;
     }
     public void setDeptId(int deptId) {
         this.deptId = deptId;
-    }
-    public String getDeptName() {
-        return deptName;
-    }
-    public void setDeptName(String deptName) {
-        this.deptName = deptName;
     }
     public String getEmail() {
         return email;

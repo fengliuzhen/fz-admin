@@ -52,7 +52,7 @@ public class Interceptor implements HandlerInterceptor {
             //判断权限
             String servletPath=request.getServletPath();
             //过滤要验证权限的路径
-            if(Objects.equals(servletPath.toLowerCase().contains("/menupath/"),false))
+            if(Objects.equals(servletPath.toLowerCase().contains("/auth/"),false))
             {
                 beginTime = System.currentTimeMillis();//1、开始时间
                 startTimeThreadLocal.set(beginTime);//线程绑定变量（该数据只有当前请求的线程可见）

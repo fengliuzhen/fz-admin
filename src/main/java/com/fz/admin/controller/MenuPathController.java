@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
-@RequestMapping("/menupath")
+@RequestMapping("/auth")
 public class MenuPathController {
     //所有的菜单跳转必须以 /menupath/开头
     @RequestMapping(value = "/organization/deptlist",method = RequestMethod.GET)

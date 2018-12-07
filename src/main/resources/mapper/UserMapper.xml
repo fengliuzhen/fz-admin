@@ -16,4 +16,106 @@ LEFT JOIN sys_user_post sup ON su.id=sup.userid
   LEFT JOIN sys_post sp ON sup.postid=sp.id
  WHERE su.id=#{userId,jdbcType=INTEGER} limit 1
     </select>
+    <select id="getUserList" resultType="com.fz.admin.entity.UserEntity" parameterType="com.fz.admin.entity.UserEntity">
+        select su.id userId,su.username,su.realname,su.email,su.islock,su.mobile,su.deptid,su.datastate,FROM_UNIXTIME(su.addtime) addtime,FROM_UNIXTIME(su.lastedittime) lastedittime,su.remark
+        from sys_user su WHERE 1=1
+        <if test="userName!=null and userName!=''">
+            and (su.username like concat('%',#{userName,jdbcType=VARCHAR}) or su.realname like concat('%',#{userName,jdbcType=VARCHAR}))
+        </if>
+        <if test="mobile!=null and mobile!=''">
+            AND su.mobile=#{mobile,jdbcType=VARCHAR}
+        </if>
+        <if test="isLock!=null and isLock>-1">
+            and su.islock=#{isLock,jdbcType=INTEGER}
+        </if>
+        ORDER BY su.id DESC
+    </select>
+    <select id="getUserModelByName" resultType="com.fz.admin.entity.UserEntity" parameterType="java.lang.String">
+        SELECT su.* FROM sys_user su WHERE su.username=#{userName,jdbcType=VARCHAR} LIMIT 1;
+  </select>
+    <insert id="addUser" parameterType="com.fz.admin.entity.AddUserEntity" >
+        insert into sys_user
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="userName != null" >
+                username,
+            </if>
+            <if test="passWord != null" >
+                password,
+            </if>
+            <if test="realName != null" >
+                realname,
+            </if>
+            <if test="email != null" >
+                email,
+            </if>
+            <if test="mobile != null" >
+                mobile,
+            </if>
+            <if test="age != null" >
+                age,
+            </if>
+            <if test="sex != null" >
+                sex,
+            </if>
+            <if test="deptId != null" >
+                deptid,
+            </if>
+            <if test="isLock != null" >
+                islock,
+            </if>
+            <if test="dataState != null" >
+                datastate,
+            </if>
+            <if test="addTime != null" >
+                addtime,
+            </if>
+            <if test="addUid != null" >
+                adduid,
+            </if>
+            <if test="remark != null" >
+                remark,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="userName != null" >
+                #{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="passWord != null" >
+                #{passWord,jdbcType=VARCHAR},
+            </if>
+            <if test="realName != null" >
+                #{realName,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null" >
+                #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="mobile != null" >
+                #{mobile,jdbcType=VARCHAR},
+            </if>
+            <if test="age != null" >
+                #{age,jdbcType=INTEGER},
+            </if>
+            <if test="sex != null" >
+                #{sex,jdbcType=INTEGER},
+            </if>
+            <if test="deptId != null" >
+                #{deptId,jdbcType=INTEGER},
+            </if>
+            <if test="isLock != null" >
+                #{isLock,jdbcType=INTEGER},
+            </if>
+            <if test="dataState != null" >
+                #{dataState,jdbcType=INTEGER},
+            </if>
+            <if test="addTime != null" >
+                #{addTime,jdbcType=INTEGER},
+            </if>
+            <if test="addUid != null" >
+                #{addUid,jdbcType=INTEGER},
+            </if>
+            <if test="remark != null" >
+                #{remark,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
 </mapper>

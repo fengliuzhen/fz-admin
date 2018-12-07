@@ -3,32 +3,116 @@
 <head>
     <meta content="text/html;charset=UTF-8"/>
     <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
+    <script type="application/javascript" th:src="@{~/js/json2.js}"></script>
     <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
     <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/moment.js}"></script>
     <title>用户管理</title>
+    <style type="text/css">
+        .el-dialog__body{
+            padding-bottom:5px;
+        }
+        .el-alert{padding-top:0px;padding-bottom: 0px;}
+        .el-table td {padding: 6px 0px;}
+        .red{color:red;font-weight: normal;}
+        .green{color:green;font-weight: normal;}
+    </style>
 </head>
 <body>
 <div id="listPanel">
+    <el-dialog title="新增用户" :visible.sync="addUserDialog" :close-on-click-modal="false" @open="open()">
+        <el-form :model="formAdd" :inline="true" size="mini" label-width="150px" :rules="addRules" ref="formAdd">
+            <el-form-item label="用户名称" prop="userName">
+                <el-input v-model.trim="formAdd.userName" clearable placeholder="用户名称"></el-input>
+            </el-form-item>
+            <el-form-item label="登录密码" prop="passWord">
+                <el-input v-model.trim="formAdd.passWord" clearable placeholder="登录密码"></el-input>
+            </el-form-item>
+            <el-form-item label="手机号码" prop="mobile">
+                <el-input v-model.trim="formAdd.mobile" clearable placeholder="手机号码"></el-input>
+            </el-form-item>
+            <el-form-item label="电子邮箱" prop="email">
+                <el-input v-model.trim="formAdd.email" clearable placeholder="电子邮箱"></el-input>
+            </el-form-item>
+            <el-form-item label="真实姓名" prop="realName">
+                <el-input v-model.trim="formAdd.realName" clearable placeholder="真实姓名"></el-input>
+            </el-form-item>
+            <el-form-item label="性别" prop="sex">
+                <el-radio-group v-model="formAdd.sex">
+                    <el-radio :label="0">男</el-radio>
+                    <el-radio :label="1">女</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="年龄" prop="age">
+                <el-input v-model.trim="formAdd.age" clearable placeholder="年龄"></el-input>
+            </el-form-item>
+            <el-form-item label="备注" prop="remark">
+                <el-input v-model.trim="formAdd.remark" clearable placeholder="备注"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer" style="text-align:center;">
+            <el-button type="primary" icon="el-icon-success" @click="saveUser('formAdd')">保存</el-button>
+            <el-button icon="el-icon-error" @click="resetInfo('formAdd')">取消</el-button>
+        </div>
+    </el-dialog>
+    <el-form :inline="true" :model="formSearch" class="demo-form-inline" size="mini">
+        <el-form-item label="用户名称">
+            <el-input v-model.trim="formSearch.userName" style="width:150px;" clearable placeholder="用户名称"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号码">
+            <el-input v-model.trim="formSearch.mobile" clearable placeholder="手机号码"></el-input>
+        </el-form-item>
+        <el-form-item label="状态">
+            <el-select v-model="formSearch.isLock" clearable  placeholder="全部" style="width:150px;">
+                <el-option v-for="item in lockList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="success" @click="onSearchList" icon="el-icon-search">检索</el-button>
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addUserDialog=true">添加用户</el-button>
+        </el-form-item>
+    </el-form>
     <el-table
             :data="tableData"
             border
             stripe
             style="width: 100%">
+        <el-table-column type="index" label="序号" width="60px"></el-table-column>
         <el-table-column
-                prop="date"
-                label="日期"
+                prop="userName"
+                label="用户名"
                 width="180">
         </el-table-column>
         <el-table-column
-                prop="name"
-                label="姓名"
+                prop="realName"
+                label="真实姓名"
                 width="180">
         </el-table-column>
         <el-table-column
-                prop="address"
-                label="地址">
+                prop="email"
+                label="邮箱">
+        </el-table-column>
+        <el-table-column
+                prop="mobile"
+                label="手机">
+        </el-table-column>
+        <el-table-column
+                prop="isLock"
+                label="状态">
+            <template slot-scope="scope">
+                <span class="red" v-if="scope.row.isLock==1"><b>锁定</b></span>
+                <span class="green" v-else-if="scope.row.isLock==0"><b>正常</b></span>
+            </template>
+        </el-table-column>
+        <el-table-column :formatter="dateFormat"
+            prop="addTime"
+            label="新增时间">
+    </el-table-column>
+        <el-table-column :formatter="dateFormat"
+                prop="lastEditTime"
+                label="修改时间">
         </el-table-column>
         <el-table-column label="操作">
             <template slot-scope="scope">
@@ -42,6 +126,17 @@
             </template>
         </el-table-column>
     </el-table>
+    <div align="center">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="pager.currentPage"
+                :page-sizes="[5,10,20,30]"
+                :page-size="pager.pagesize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="pager.totalCount">
+        </el-pagination>
+    </div>
 </div>
 </body>
 </html>
@@ -49,23 +144,56 @@
     var listApp=new Vue({
         el:"#listPanel",
         data:{
-            tableData: [{
-                date: '2016-05-02',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1518 弄'
-            }, {
-                date: '2016-05-04',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1517 弄'
-            }, {
-                date: '2016-05-01',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1519 弄'
-            }, {
-                date: '2016-05-03',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1516 弄'
-            }],
+            formSearch: {
+                userName:'',
+                mobile:'',
+                isLock:''
+            },
+            formAdd:{
+                userName: '',
+                passWord: '',
+                mobile: '',
+                email:'',
+                sex:0,
+                realName:'',
+                age:0,
+                remark:''
+            },
+            addRules:{
+                userName: [
+                    { required: true, message: '请填写用户名称', trigger: 'blur' },
+                    { min: 3, max:20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+                ],
+                passWord: [
+                    { required: true, message: '请填写密码', trigger: 'blur' },
+                    { min:2, max:20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+                ],
+                mobile: [
+                    { required: true, message: '请填写手机号', trigger: 'blur' },
+                    ,{validator:function(rule,value,callback){
+                            if(/^1[0-9]\d{9}$/.test(value) == false){
+                                callback(new Error("手机号不符合规则"));
+                            }else{
+                                callback();
+                            }
+                        }, trigger: 'blur'}
+                ],
+                email: [
+                    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+                    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+                ],
+                age: [
+                    {type: 'number', message: '年龄必须为整数', trigger: 'blur' }
+                ]
+            },
+            lockList:[{id:1,name:'锁定'},{id:0,name:'正常'}],
+            //表格当前页数据
+            tableData: [],
+            //请求的URL
+            url:'/user/searchlist',
+            addUrl:'/user/add',
+            addUserDialog:false,
+            emulateJSON:false,
             pager:{
                 pageSize:10,
                 currentPage:1,
@@ -74,13 +202,87 @@
         },
         methods:{
             loadListData:function () {
+                window.parent.app.loadingSwitch(true);
+                var paramsJson={
+                    userName:this.formSearch.userName,
+                    mobile:this.formSearch.mobile,
+                    isLock:this.formSearch.isLock,
+                    pageNum:this.pager.currentPage,
+                    pageSize:this.pager.pageSize};
+                this.$http.post(this.url,paramsJson).then(function(res) {
+                    var tmpDataList = res.data.datalist;
+                    this.tableData = tmpDataList;
+                    this.pager.totalCount = res.data.number;
+                });
+                window.parent.app.loadingSwitch(false);
+            },
+            saveUser:function(formName){
+                var isValidPass=true;
+                this.$refs[formName].validate(function (valid) {
+                    isValidPass=valid;
+                    if(!valid)
+                    {
+                        return false;
+                    }
+                });
+                if(!isValidPass)
+                {
+                    return false;
+                }
+                //验证通过
+                var addJson={
+                    userName:this.formAdd.userName,
+                    passWord:this.formAdd.passWord,
+                    mobile:this.formAdd.mobile,
+                    email:this.formAdd.email,
+                    realName:this.formAdd.realName,
+                    sex:this.formAdd.sex,
+                    age:this.formAdd.age,
+                    remark:this.formAdd.remark
+                };
+                this.$http.post(this.addUrl,addJson).then(function(res2){
+                    window.parent.app.loadingSwitch(false);
+                    var addInfo=JSON.parse(res2.bodyText);
+                    alert(addInfo.message);
+                    if(addInfo.code==200) {
+                        this.loadListData();
+                        this.addUserDialog = false;
+                    }
+                },function(){
+                    alert("同步失败！");
+                    window.parent.app.loadingSwitch(false);
+                });
 
+            },
+            resetInfo:function(formName){
+                this.addUserDialog = false;
+                this.$refs[formName].resetFields();
             },
             handleEdit(index, row) {
                 console.log(index, row);
             },
             handleDelete(index, row) {
                 console.log(index, row);
+            },
+            //每页显示数据量变更
+            handleSizeChange: function(val) {
+                this.pager.pageSize=val;
+                this.loadListData();
+            },
+            //页码变更
+            handleCurrentChange: function(val) {
+                this.pager.currentPage=val;
+                this.loadListData();
+            },
+            dateFormat:function(row, column) {
+                var date = row[column.property];
+                if (date == undefined) {
+                    return "";
+                }
+                return moment(date).format("YYYY-MM-DD HH:mm:ss");
+            },
+            onSearchList:function () {
+                this.loadListData();
             }
         }
     });

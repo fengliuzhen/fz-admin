@@ -57,29 +57,26 @@
 <body>
 <div id="appPanel">
     <el-container id="container1">
-        <el-header>
+        <el-header style="padding-left: 0px;">
             <el-row :gutter="20">
-                <el-col :span="3"><div class="grid-content bg-purple"><label th:text="${sysname}" style="color: #ffffff;font-size: 14px;"></label></div></el-col>
-                <el-col :span="9">
-                    <div class="grid-content bg-purple">
-                    <el-dropdown trigger="click" style="float:left;" @command="selectItem">
-                          <span class="el-dropdown-link" style="color: #ffffff;cursor:pointer;">
-                            <label style="color: #ffffff;cursor:pointer;" th:text="${'欢迎您，'+adminname}"></label>
-                              <i class="el-icon-arrow-down el-icon--right"></i>
-                          </span>
-                    <el-dropdown-menu slot="dropdown">
-                        <el-dropdown-item command="1">修改密码</el-dropdown-item>
-                        <el-dropdown-item command="2">个人信息</el-dropdown-item>
-                        <el-dropdown-item command="3">退出</el-dropdown-item>
-                    </el-dropdown-menu>
-                </el-dropdown>
-                        &nbsp;&nbsp;<label style="color: #ffffff;font-size: 14px;" th:text="${'岗位【'+postname+'】，部门【'+deptname+'】'}"></label>
-                    </div>
+                <el-col :span="3"><div class="grid-content bg-purple" style="width:200px;text-align: center;"><label th:text="${sysname}" style="color: #ffffff;font-size: 18px;font-family: 'Microsoft YaHei UI';"></label></div></el-col>
+                <el-col :span="9"><div class="grid-content bg-purple">&nbsp;</div>
                 </el-col>
                 <el-col :span="6"><div class="grid-content bg-purple">&nbsp;</div></el-col>
                 <el-col :span="6">
                     <div class="grid-content bg-purple">
-
+                    <label style="color: #ffffff;font-size: 14px;" th:text="${'岗位【'+postname+'】，部门【'+deptname+'】'}"></label>&nbsp;&nbsp;
+                        <el-dropdown trigger="click" style="float:right;" @command="selectItem">
+                          <span class="el-dropdown-link" style="color: #ffffff;cursor:pointer;">
+                            <label style="color: #ffffff;cursor:pointer;" th:text="${'欢迎您，'+adminname}"></label>
+                              <i class="el-icon-arrow-down el-icon--right"></i>
+                          </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item command="2">个人信息</el-dropdown-item>
+                                <el-dropdown-item command="1">修改密码</el-dropdown-item>
+                                <el-dropdown-item command="3">退出</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
                     </div>
                 </el-col>
             </el-row>
@@ -165,6 +162,7 @@
         },
         methods:{
             loadMenuData:function(){
+                this.loadingSwitch(true);
                 //动态获取数据
                 this.$http.get(this.bindMenuUrl).then(function(res2){
                     this.menudata =res2.data;
@@ -172,6 +170,7 @@
                 },function(){
                     console.log('failed');
                 });
+                this.loadingSwitch(false);
             },
             itemSelect:function(key,keypath){
                 var tmpItem=key;
@@ -181,14 +180,14 @@
                 $.each(this.tabList,function (i,tab) {
                     if(tab.name==tmpItem.id) {
                         nextName=tmpItem.id;
-                        //刷新
-                        $('fiframe'+tmpItem.id).attr('src', $('fiframe'+tmpItem.id).attr('src'));
                         return;
                     }
                 });
 
                 if(nextName!="")
                 {
+                    //刷新
+                    //$('fiframe'+tmpItem.id).attr('src', $('fiframe'+tmpItem.id).attr('src'));
                     this.defTabIndex=nextName;
                     return;
                 }
@@ -278,6 +277,17 @@
             },
             handleClose:function (_done) {
                 
+            },
+            loadingSwitch:function (tmpSwitch) {
+                var fullLoading = this.$loading({
+                    lock: true,
+                    text: 'Loading',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
+                if(!tmpSwitch) {
+                    fullLoading.close();
+                }
             }
         }
     });
