@@ -34,5 +34,8 @@
         <setting name="jdbcTypeForNull" value="NULL" />
         <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString" />
     </settings>
-
+<plugins>
+    <!-- 拦截sql -->
+    <plugin interceptor="com.fz.admin.datasource.SqlPrintInterceptor"></plugin>
+</plugins>
 </configuration>

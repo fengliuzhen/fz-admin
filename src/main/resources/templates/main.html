@@ -56,14 +56,25 @@
 </head>
 <body>
 <div id="appPanel">
+    <el-dialog title="修改密码" :visible.sync="dialogPwdVisible">
+        <el-form :model="formPwd" :rules="rulesPwd" ref="formPwd"  :label-width="formLabelWidth">
+            <el-form-item label="新密码" prop="password">
+                <el-input v-model.trim="formPwd.password" autocomplete="off"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogPwdVisible = false">取 消</el-button>
+            <el-button type="primary" @click="updatePwd('formPwd')">确 定</el-button>
+        </div>
+    </el-dialog>
     <el-container id="container1">
         <el-header style="padding-left: 0px;">
             <el-row :gutter="20">
                 <el-col :span="3"><div class="grid-content bg-purple" style="width:200px;text-align: center;"><label th:text="${sysname}" style="color: #ffffff;font-size: 18px;font-family: 'Microsoft YaHei UI';"></label></div></el-col>
                 <el-col :span="9"><div class="grid-content bg-purple">&nbsp;</div>
                 </el-col>
-                <el-col :span="6"><div class="grid-content bg-purple">&nbsp;</div></el-col>
-                <el-col :span="6">
+                <el-col :span="4"><div class="grid-content bg-purple">&nbsp;</div></el-col>
+                <el-col :span="8">
                     <div class="grid-content bg-purple">
                     <label style="color: #ffffff;font-size: 14px;" th:text="${'岗位【'+postname+'】，部门【'+deptname+'】'}"></label>&nbsp;&nbsp;
                         <el-dropdown trigger="click" style="float:right;" @command="selectItem">
@@ -133,10 +144,31 @@
             :close-on-click-modal="false"
             width="30%"
             :before-close="handleClose">
-        <span>这是一段信息</span>
+        <el-form ref="formInfo" :model="formInfo" label-width="80px">
+            <el-form-item label="用户名：">
+                <label v-text="formInfo.userName"></label>
+            </el-form-item>
+            <el-form-item label="昵称：">
+                <label v-text="formInfo.nickName"></label>
+            </el-form-item>
+            <el-form-item label="真实姓名：">
+                <label v-text="formInfo.realName"></label>
+            </el-form-item>
+            <el-form-item label="部门：">
+                <label v-text="formInfo.deptName"></label>
+            </el-form-item>
+            <el-form-item label="岗位：">
+                <label v-text="formInfo.postName"></label>
+            </el-form-item>
+            <el-form-item label=手机：">
+                <label v-text="formInfo.mobile"></label>
+            </el-form-item>
+            <el-form-item label="邮箱：">
+                <label v-text="formInfo.email"></label>
+            </el-form-item>
+        </el-form>
         <span slot="footer" class="dialog-footer">
-    <el-button @click="dialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+    <el-button @click="dialogVisible = false">关 闭</el-button>
   </span>
     </el-dialog>
 </div>
@@ -148,9 +180,29 @@
         data:{
             dialogVisible:false,
             defTabIndex: '0',
-            dialogTitle:"标题",
+            dialogTitle:"用户信息",
             tabIndex: 1,
             IsUniqueOpen:true,
+            dialogPwdVisible:false,
+            formLabelWidth:"100px",
+            formPwd:{
+                password:""
+            },
+            rulesPwd:{
+                password:[ { required: true, message: '请输入密码', trigger: 'blur' },
+                    { min: 4, max:20, message: '长度在 4 到 20 个字符', trigger: 'blur' }]
+            },
+            formInfo:{
+                userName: '',
+                nickName:'',
+                mobile: '',
+                email:'',
+                sex:0,
+                realName:'',
+                age:0,
+                postName:'',
+                deptName:""
+            },
             bindMenuUrl:'/menulist',
             tabList: [{
                 title: '首页',
@@ -243,13 +295,69 @@
                         }
                     });
                 }
-                else
+                else if(command=="2")
                 {
-                    this.$message({
-                        message: '功能开发中。。。',
-                        type: 'success'
+                    //个人信息
+                    this.$http.get("/user/get/-1").then(function(res2){
+                        this.loadingSwitch(false);
+                        var addInfo=JSON.parse(res2.bodyText);
+                        if(addInfo.code==200) {
+                            this.dialogVisible = true;
+                            this.formInfo.userName=addInfo.data.userName;
+                            this.formAdd.realName=addInfo.data.realName;
+                            this.formAdd.email=addInfo.data.email;
+                            this.formAdd.mobile=addInfo.data.mobile;
+                            this.formAdd.age=addInfo.data.age;
+                            this.formAdd.sex=addInfo.data.sex;
+                            this.formAdd.postName=addInfo.data.postName;
+                            this.formAdd.deptName=addInfo.data.deptName;
+                        }
+                        else
+                        {
+                            alert(addInfo.message);
+                        }
+                    },function(){
+                        alert("同步失败！");
+                        this.loadingSwitch(false);
                     });
                 }
+                else if(command=="1") {
+                    //修改密码
+                    this.dialogPwdVisible=true;
+                    this.$refs['formPwd'].resetFields();
+                }
+            },
+            updatePwd:function(formName){
+                var isValid=true;
+                this.$refs[formName].validate(function(valid){
+                    if (!valid) {
+                        alert("密码不符合要求");
+                        isValid=false;
+                        return false;
+                    }
+                });
+                if(!isValid)
+                {
+                    return;
+                }
+                var strPwd=this.formPwd.password;
+                var dataJson={"userId":0,"passWord":strPwd};
+                this.$http.post("/user/udpatepwd",dataJson).then(function(res2){
+                    window.parent.app.loadingSwitch(false);
+                    var addInfo=JSON.parse(res2.bodyText);
+                    if(addInfo.code==200) {
+                        alert(addInfo.message);
+                        this.$refs['formPwd'].resetFields();
+                        this.dialogPwdVisible=false;
+                    }
+                    else
+                    {
+                        alert(addInfo.message);
+                    }
+                },function(){
+                    alert("同步失败！");
+                    window.parent.app.loadingSwitch(false);
+                });
             },
             clickTab:function (tabItem) {
 

@@ -26,18 +26,22 @@
         <el-form :model="formAdd" :inline="true" size="mini" label-width="150px" :rules="addRules" ref="formAdd">
             <el-form-item label="用户名称" prop="userName">
                 <el-input v-model.trim="formAdd.userName" clearable placeholder="用户名称"></el-input>
+                <el-input v-model.trim="formAdd.userId" type="hidden"></el-input>
             </el-form-item>
-            <el-form-item label="登录密码" prop="passWord">
+            <el-form-item label="登录密码" prop="passWord" id="formAddPassWord">
                 <el-input v-model.trim="formAdd.passWord" clearable placeholder="登录密码"></el-input>
+            </el-form-item>
+            <el-form-item label="昵称" prop="nickName">
+                <el-input v-model.trim="formAdd.nickName" clearable placeholder="昵称"></el-input>
+            </el-form-item>
+            <el-form-item label="真实姓名" prop="realName">
+                <el-input v-model.trim="formAdd.realName" clearable placeholder="真实姓名"></el-input>
             </el-form-item>
             <el-form-item label="手机号码" prop="mobile">
                 <el-input v-model.trim="formAdd.mobile" clearable placeholder="手机号码"></el-input>
             </el-form-item>
             <el-form-item label="电子邮箱" prop="email">
                 <el-input v-model.trim="formAdd.email" clearable placeholder="电子邮箱"></el-input>
-            </el-form-item>
-            <el-form-item label="真实姓名" prop="realName">
-                <el-input v-model.trim="formAdd.realName" clearable placeholder="真实姓名"></el-input>
             </el-form-item>
             <el-form-item label="性别" prop="sex">
                 <el-radio-group v-model="formAdd.sex">
@@ -71,35 +75,39 @@
         </el-form-item>
         <el-form-item>
             <el-button type="success" @click="onSearchList" icon="el-icon-search">检索</el-button>
-            <el-button type="primary" icon="el-icon-plus" size="mini" @click="addUserDialog=true">添加用户</el-button>
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="handleAdd()">添加用户</el-button>
         </el-form-item>
     </el-form>
     <el-table
             :data="tableData"
             border
             stripe
-            style="width: 100%">
+            fit="true">
+
         <el-table-column type="index" label="序号" width="60px"></el-table-column>
         <el-table-column
                 prop="userName"
-                label="用户名"
-                width="180">
+                label="用户名">
+        </el-table-column>
+        <el-table-column
+                prop="nickName"
+                label="昵称">
         </el-table-column>
         <el-table-column
                 prop="realName"
-                label="真实姓名"
-                width="180">
+                label="真实姓名">
         </el-table-column>
-        <el-table-column
+       <!-- <el-table-column
                 prop="email"
                 label="邮箱">
         </el-table-column>
         <el-table-column
                 prop="mobile"
                 label="手机">
-        </el-table-column>
+        </el-table-column>-->
         <el-table-column
                 prop="isLock"
+                width="60px"
                 label="状态">
             <template slot-scope="scope">
                 <span class="red" v-if="scope.row.isLock==1"><b>锁定</b></span>
@@ -110,19 +118,25 @@
             prop="addTime"
             label="新增时间">
     </el-table-column>
-        <el-table-column :formatter="dateFormat"
+<!--        <el-table-column :formatter="dateFormat"
                 prop="lastEditTime"
                 label="修改时间">
-        </el-table-column>
-        <el-table-column label="操作">
+        </el-table-column>-->
+        <el-table-column label="操作" width="160px">
             <template slot-scope="scope">
                 <el-button
-                        size="mini"
+                        size="mini" type="primary" plain
                         @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
                 <el-button
                         size="mini"
-                        type="danger"
-                        @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                        v-if="scope.row.isLock==0"
+                        type="danger" plain
+                        @click="handleDelete(scope.$index, scope.row)">锁定</el-button>
+                <el-button
+                        size="mini"
+                        v-if="scope.row.isLock==1"
+                        type="success" plain
+                        @click="handleDelete(scope.$index, scope.row)">解锁</el-button>
             </template>
         </el-table-column>
     </el-table>
@@ -147,10 +161,12 @@
             formSearch: {
                 userName:'',
                 mobile:'',
-                isLock:''
+                isLock:-1
             },
             formAdd:{
+                userId:0,
                 userName: '',
+                nickName:'',
                 passWord: '',
                 mobile: '',
                 email:'',
@@ -181,17 +197,15 @@
                 email: [
                     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
                     { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
-                ],
-                age: [
-                    {type: 'number', message: '年龄必须为整数', trigger: 'blur' }
                 ]
             },
-            lockList:[{id:1,name:'锁定'},{id:0,name:'正常'}],
+            lockList:[{id:-1,name:'全部'},{id:1,name:'锁定'},{id:0,name:'正常'}],
             //表格当前页数据
             tableData: [],
             //请求的URL
             url:'/user/searchlist',
-            addUrl:'/user/add',
+            lockurl:'/user/udpatelock',
+            addUrl:'/user/save',
             addUserDialog:false,
             emulateJSON:false,
             pager:{
@@ -218,6 +232,10 @@
             },
             saveUser:function(formName){
                 var isValidPass=true;
+                if(this.formAdd.userId>0)
+                {
+                    this.addRules.passWord[0].required=false;
+                }
                 this.$refs[formName].validate(function (valid) {
                     isValidPass=valid;
                     if(!valid)
@@ -231,7 +249,9 @@
                 }
                 //验证通过
                 var addJson={
+                    userId:this.formAdd.userId,
                     userName:this.formAdd.userName,
+                    nickName:this.formAdd.nickName,
                     passWord:this.formAdd.passWord,
                     mobile:this.formAdd.mobile,
                     email:this.formAdd.email,
@@ -252,17 +272,58 @@
                     alert("同步失败！");
                     window.parent.app.loadingSwitch(false);
                 });
-
             },
             resetInfo:function(formName){
                 this.addUserDialog = false;
                 this.$refs[formName].resetFields();
             },
             handleEdit(index, row) {
-                console.log(index, row);
+                this.$refs['formAdd'].resetFields();
+                this.$http.get("/user/get/"+row.userId).then(function(res2){
+                    window.parent.app.loadingSwitch(false);
+                    var addInfo=JSON.parse(res2.bodyText);
+                    //alert(addInfo.message);
+                    if(addInfo.code==200) {
+                        $("#formAddPassWord").hide();
+                        this.addUserDialog = true;
+                        this.formAdd.userName=addInfo.data.userName;
+                        this.formAdd.userId=addInfo.data.userId;
+                        this.formAdd.realName=addInfo.data.realName;
+                        this.formAdd.email=addInfo.data.email;
+                        this.formAdd.mobile=addInfo.data.mobile;
+                        this.formAdd.age=addInfo.data.age;
+                        this.formAdd.sex=addInfo.data.sex;
+                        this.formAdd.remark=addInfo.data.remark;
+                    }
+                    else
+                    {
+                        alert(addInfo.message);
+                    }
+                },function(){
+                    alert("同步失败！");
+                    window.parent.app.loadingSwitch(false);
+                });
+            },
+            handleAdd(){
+                this.addUserDialog = true;
+                this.$refs['formAdd'].resetFields();
+                $("#formAddPassWord").show();
             },
             handleDelete(index, row) {
-                console.log(index, row);
+                var tmpUid=row.userId;
+                var updateJson={"userId":tmpUid};
+                this.$http.post(this.lockurl,updateJson).then(function(res2){
+                    window.parent.app.loadingSwitch(false);
+                    var addInfo=JSON.parse(res2.bodyText);
+                    alert(addInfo.message);
+                    if(addInfo.code==200) {
+                        this.loadListData();
+                        this.addUserDialog = false;
+                    }
+                },function(){
+                    alert("修改失败！");
+                    window.parent.app.loadingSwitch(false);
+                });
             },
             //每页显示数据量变更
             handleSizeChange: function(val) {

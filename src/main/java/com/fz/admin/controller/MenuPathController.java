@@ -24,4 +24,9 @@ public class MenuPathController {
     {
         return "organization/userlist";
     }
+    @RequestMapping(value = "/system/loglist",method = RequestMethod.GET)
+    public String LogList(Model model)
+    {
+        return "system/loglist";
+    }
 }

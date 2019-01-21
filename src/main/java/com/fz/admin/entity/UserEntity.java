@@ -6,6 +6,16 @@ import java.util.Date;
 public class UserEntity extends PageParams implements Serializable  {
     private int userId;
     private String userName;
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    private String nickName;
     private String realName;
     private int isLock;
     private String email;
@@ -17,6 +27,25 @@ public class UserEntity extends PageParams implements Serializable  {
     private Date addTime;
     private Date lastEditTime;
     private String remark;
+    private int sex;
+
+    public int getSex() {
+        return sex;
+    }
+
+    public void setSex(int sex) {
+        this.sex = sex;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    private int age;
 
     public int getDataState() {
         return dataState;

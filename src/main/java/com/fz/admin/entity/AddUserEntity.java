@@ -1,10 +1,25 @@
 package com.fz.admin.entity;
 
+import java.util.Date;
+
 public class AddUserEntity {
     private int userId;
     private String userName;
     private String realName;
     private String passWord;
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    /**
+     * 昵称
+     */
+    private String nickName;
 
     public String getPassWord() {
         return passWord;
@@ -40,6 +55,25 @@ public class AddUserEntity {
     private int addTime;
     private int addUid;
     private String remark;
+
+    public int getLastEditTime() {
+        return lastEditTime;
+    }
+
+    public void setLastEditTime(int lastEditTime) {
+        this.lastEditTime = lastEditTime;
+    }
+
+    public int getLastEditUid() {
+        return lastEditUid;
+    }
+
+    public void setLastEditUid(int lastEditUid) {
+        this.lastEditUid = lastEditUid;
+    }
+
+    private int lastEditTime;
+    private int lastEditUid;
 
     public int getDataState() {
         return dataState;

@@ -1,14 +1,17 @@
 package com.fz.admin.serviceImpl;
 
 import com.fz.admin.core.DateCore;
+import com.fz.admin.dao.SysLogDao;
 import com.fz.admin.dao.UserDao;
 import com.fz.admin.entity.AddUserEntity;
+import com.fz.admin.entity.SysLog;
 import com.fz.admin.entity.UserEntity;
 import com.fz.admin.service.UserService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +22,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private SysLogDao sysLogDao;
 
     public UserEntity getLoginInfo(String userName, String passWord)
     {
@@ -47,8 +53,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public int updateUser(AddUserEntity addUserEntity) {
+        addUserEntity.setLastEditTime(DateCore.getDateStamp());
+        return userDao.updateUser(addUserEntity);
+    }
+
+    @Override
     public UserEntity getUserModelByName(String userName) {
         return userDao.getUserModelByName(userName);
     }
 
+    @Override
+    public UserEntity getUserModelById(int userId) {
+        return  userDao.getUserModelById(userId);
+    }
+
+    @Override
+    @Transactional
+    public int updateLock(SysLog sysLog) {
+        try {
+            int userRows=userDao.updateLock(sysLog);
+            int logRows=sysLogDao.addLog(sysLog);
+            return Math.abs(userRows+logRows);
+        }
+        catch (Exception ex)
+        {
+            return 0;
+        }
+    }
+    @Override
+    public int updatePwd(AddUserEntity addUserEntity)
+    {
+        return userDao.updatePwd(addUserEntity);
+    }
 }

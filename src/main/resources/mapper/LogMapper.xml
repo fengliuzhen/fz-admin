@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fz.admin.dao.SysLogDao">
+    <update id="addLog" parameterType="com.fz.admin.entity.SysLog">
+    INSERT INTO sys_log(logtype,mid,content,logtime,uid,uname) VALUES(#{logType,jdbcType=INTEGER},#{mid,jdbcType=INTEGER},#{content,jdbcType=VARCHAR},NOW(),#{uid,jdbcType=INTEGER},#{uName,jdbcType=VARCHAR})
+    </update>
+</mapper>

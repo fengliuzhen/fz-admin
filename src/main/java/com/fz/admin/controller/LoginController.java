@@ -12,6 +12,8 @@ import com.fz.admin.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,6 +30,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Controller
+@RefreshScope
 public class LoginController {
 
     public Logger log = LoggerFactory.getLogger(LoginController.class);
@@ -39,6 +42,9 @@ public class LoginController {
 
     @Autowired
     private UserService userService;
+
+    @Value("${email}")
+    private String email;
 
     @RequestMapping("/")
     public String Index()
@@ -55,7 +61,7 @@ public class LoginController {
             redisService.remove(SystemEnum.Admin_Sid.getValue()+tmpSessionId);
         }
         SysConfig sysConfig=sysConfigService.getEntityByKey("sysname");
-        model.addAttribute("sysname", Objects.equals(sysConfig,null)?"管理系统":sysConfig.getItemVal());
+        model.addAttribute("sysname", Objects.equals(sysConfig,null)?"管理系统":sysConfig.getItemVal().concat(this.email));
         model.addAttribute("imgr",(new Random().nextInt()));
         return "login";
     }

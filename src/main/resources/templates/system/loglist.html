@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html;charset=UTF-8"/>
+    <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
+    <script type="application/javascript" th:src="@{~/js/json2.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
+    <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/moment.js}"></script>
+    <title>日志搜索</title>
+</head>
+<body>
+<div id="listPanel">
+    <el-form :inline="true" :model="logSearch" class="demo-form-inline" size="mini">
+        <el-form-item label="关键字2">
+            <el-input v-model.trim="logSearch.key" style="width:150px;" clearable placeholder="关键字"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="success" @click="onSearchLogList" icon="el-icon-search">搜索</el-button>
+        </el-form-item>
+    </el-form>
+    <el-table
+            :data="tableData"
+            border
+            stripe
+            style="width: 100%">
+        <el-table-column type="index" label="序号" width="60px"></el-table-column>
+        <el-table-column
+
+                label="内容"
+                width="300">
+            <template slot-scope="scope">
+
+                <div v-html="scope.row.content"></div>
+
+            </template>
+        </el-table-column>
+        <el-table-column :formatter="dateFormat"
+                         prop="logTime"
+                         label="日期">
+        </el-table-column>
+    </el-table>
+    <div align="center">
+        <el-pagination
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="pager.currentPage"
+                :page-sizes="[5,10,20,30]"
+                :page-size="pager.pagesize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="pager.totalCount">
+        </el-pagination>
+    </div>
+</div>
+</body>
+</html>
+<script type="application/javascript">
+    var listApp=new Vue({
+        el:"#listPanel",
+        data:{
+            logSearch: {
+                key:'',
+            },
+            tableData: [],
+            searchurl:'/searchkeylog',
+            emulateJSON:false,
+            pager:{
+                pageSize:10,
+                currentPage:0,
+                totalCount:0
+            }
+        },
+        methods:{
+            loadListData:function () {
+                window.parent.app.loadingSwitch(true);
+                var searchParam="?content="+this.logSearch.key+"&pageIndex="+this.pager.currentPage+"&pageSize="+this.pager.pageSize;
+                this.$http.get(this.searchurl+searchParam).then(function(res) {
+                    this.tableData=res.body;
+                    //this.pager.totalCount=res.body.totalElements;
+                });
+                window.parent.app.loadingSwitch(false);
+            },
+            handleEdit(index, row) {
+                console.log(index, row);
+            },
+            handleDelete(index, row) {
+                console.log(index, row);
+            },
+            //每页显示数据量变更
+            handleSizeChange: function(val) {
+                this.pager.pageSize=val;
+                this.loadListData();
+            },
+            //页码变更
+            handleCurrentChange: function(val) {
+                this.pager.currentPage=val;
+                this.loadListData();
+            },
+            dateFormat:function(row, column) {
+                var date = row[column.property];
+                if (date == undefined) {
+                    return "";
+                }
+                return moment(date).format("YYYY-MM-DD HH:mm:ss");
+            },
+            onSearchLogList:function () {
+                this.loadListData();
+            }
+        }
+    });
+</script>

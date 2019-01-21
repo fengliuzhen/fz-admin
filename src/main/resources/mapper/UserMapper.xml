@@ -3,21 +3,21 @@
 
 <mapper namespace="com.fz.admin.dao.UserDao">
     <select id="getLoginInfo"  resultType="com.fz.admin.entity.UserEntity" parameterType="java.util.Map">
-        SELECT su.id userId,su.username,su.realname,su.email,su.islock,su.mobile,su.deptid,sd.deptname,GROUP_CONCAT(sp.postname) postname
+        SELECT su.id userId,su.username,su.nickname,su.realname,su.email,su.islock,su.mobile,su.deptid,sd.deptname,GROUP_CONCAT(sp.postname) postname
 FROM sys_user su LEFT JOIN sys_department sd ON su.deptid=sd.id
 LEFT JOIN sys_user_post sup ON su.id=sup.userid
   LEFT JOIN sys_post sp ON sup.postid=sp.id
 WHERE su.username=#{userName,jdbcType=VARCHAR} AND su.password=#{passWord,jdbcType=VARCHAR} limit 1
     </select>
     <select id="getUserBaseInfo"  resultType="com.fz.admin.entity.UserEntity" parameterType="java.lang.Integer">
-        SELECT su.id userId,su.username,su.realname,su.email,su.islock,su.mobile,su.deptid,sd.deptname,GROUP_CONCAT(sp.postname) postname
+        SELECT su.id userId,su.username,su.nickname,su.realname,su.email,su.islock,su.mobile,su.deptid,sd.deptname,GROUP_CONCAT(sp.postname) postname
 FROM sys_user su LEFT JOIN sys_department sd ON su.deptid=sd.id
 LEFT JOIN sys_user_post sup ON su.id=sup.userid
   LEFT JOIN sys_post sp ON sup.postid=sp.id
  WHERE su.id=#{userId,jdbcType=INTEGER} limit 1
     </select>
     <select id="getUserList" resultType="com.fz.admin.entity.UserEntity" parameterType="com.fz.admin.entity.UserEntity">
-        select su.id userId,su.username,su.realname,su.email,su.islock,su.mobile,su.deptid,su.datastate,FROM_UNIXTIME(su.addtime) addtime,FROM_UNIXTIME(su.lastedittime) lastedittime,su.remark
+        select su.id userId,su.username,su.nickname,su.realname,su.email,su.islock,su.mobile,su.deptid,su.datastate,FROM_UNIXTIME(su.addtime) addtime,FROM_UNIXTIME(su.lastedittime) lastedittime,su.remark
         from sys_user su WHERE 1=1
         <if test="userName!=null and userName!=''">
             and (su.username like concat('%',#{userName,jdbcType=VARCHAR}) or su.realname like concat('%',#{userName,jdbcType=VARCHAR}))
@@ -31,7 +31,10 @@ LEFT JOIN sys_user_post sup ON su.id=sup.userid
         ORDER BY su.id DESC
     </select>
     <select id="getUserModelByName" resultType="com.fz.admin.entity.UserEntity" parameterType="java.lang.String">
-        SELECT su.* FROM sys_user su WHERE su.username=#{userName,jdbcType=VARCHAR} LIMIT 1;
+        SELECT su.id userId,su.* FROM sys_user su WHERE su.username=#{userName,jdbcType=VARCHAR} LIMIT 1;
+  </select>
+    <select id="getUserModelById" resultType="com.fz.admin.entity.UserEntity" parameterType="java.lang.Integer">
+        SELECT su.id userId,su.* FROM sys_user su WHERE su.id=#{userId,jdbcType=INTEGER} LIMIT 1;
   </select>
     <insert id="addUser" parameterType="com.fz.admin.entity.AddUserEntity" >
         insert into sys_user
@@ -41,6 +44,9 @@ LEFT JOIN sys_user_post sup ON su.id=sup.userid
             </if>
             <if test="passWord != null" >
                 password,
+            </if>
+            <if test="nickName != null" >
+                nickname,
             </if>
             <if test="realName != null" >
                 realname,
@@ -83,6 +89,9 @@ LEFT JOIN sys_user_post sup ON su.id=sup.userid
             <if test="passWord != null" >
                 #{passWord,jdbcType=VARCHAR},
             </if>
+            <if test="nickName != null" >
+                #{nickName,jdbcType=VARCHAR},
+            </if>
             <if test="realName != null" >
                 #{realName,jdbcType=VARCHAR},
             </if>
@@ -118,4 +127,16 @@ LEFT JOIN sys_user_post sup ON su.id=sup.userid
             </if>
         </trim>
     </insert>
+    <update id="updateUser" parameterType="com.fz.admin.entity.AddUserEntity">
+	UPDATE sys_user su SET su.username=#{userName,jdbcType=VARCHAR},su.nickname=#{nickName,jdbcType=VARCHAR},su.realname=#{realName,jdbcType=VARCHAR},su.email=#{email,jdbcType=VARCHAR},
+	su.mobile=#{mobile,jdbcType=VARCHAR},su.age=#{age,jdbcType=INTEGER},su.sex=#{sex,jdbcType=INTEGER},
+	su.lastedittime=#{lastEditTime,jdbcType=INTEGER},su.lastedituid=#{lastEditUid,jdbcType=INTEGER} WHERE su.id=#{userId,jdbcType=INTEGER};
+	</update>
+    <update id="updateLock" parameterType="com.fz.admin.entity.SysLog">
+    UPDATE sys_user su set su.islock=ABS(su.islock-1),su.lastedittime=UNIX_TIMESTAMP(NOW()),su.lastedituid=#{uid,jdbcType=INTEGER} WHERE su.id=#{mid,jdbcType=BIGINT};
+    </update>
+    <update id="updatePwd" parameterType="com.fz.admin.entity.AddUserEntity">
+	UPDATE sys_user su SET su.password=#{passWord,jdbcType=VARCHAR},su.lastedittime=UNIX_TIMESTAMP(NOW()),su.lastedituid=#{userId,jdbcType=INTEGER}
+	WHERE su.id=#{userId,jdbcType=INTEGER};
+	</update>
 </mapper>
