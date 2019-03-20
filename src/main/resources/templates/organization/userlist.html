@@ -22,26 +22,26 @@
 </head>
 <body>
 <div id="listPanel">
-    <el-dialog title="新增用户" :visible.sync="addUserDialog" :close-on-click-modal="false" @open="open()">
-        <el-form :model="formAdd" :inline="true" size="mini" label-width="150px" :rules="addRules" ref="formAdd">
-            <el-form-item label="用户名称" prop="userName">
+    <el-dialog :title="addUserDialogTitle" :visible.sync="addUserDialog" :close-on-click-modal="false" @open="open()">
+        <el-form :model="formAdd" :inline="true" class="demo-form-inline" size="mini" :rules="addRules" ref="formAdd">
+            <el-form-item label="登录账号" prop="userName">
                 <el-input v-model.trim="formAdd.userName" clearable placeholder="用户名称"></el-input>
-                <el-input v-model.trim="formAdd.userId" type="hidden"></el-input>
+                <!--<el-input v-model.trim="formAdd.userId" type="hidden"></el-input>-->
             </el-form-item>
-            <el-form-item label="登录密码" prop="passWord" id="formAddPassWord">
-                <el-input v-model.trim="formAdd.passWord" clearable placeholder="登录密码"></el-input>
-            </el-form-item>
-            <el-form-item label="昵称" prop="nickName">
-                <el-input v-model.trim="formAdd.nickName" clearable placeholder="昵称"></el-input>
-            </el-form-item>
-            <el-form-item label="真实姓名" prop="realName">
-                <el-input v-model.trim="formAdd.realName" clearable placeholder="真实姓名"></el-input>
+            <el-form-item label="登录密码" prop="passWord" id="formAddPassWord"  v-if="formAdd.pwdishide!=1">
+                <el-input v-model.trim="formAdd.passWord" clearable placeholder="登录密码" v-if="formAdd.pwdishide!=1"></el-input>
             </el-form-item>
             <el-form-item label="手机号码" prop="mobile">
                 <el-input v-model.trim="formAdd.mobile" clearable placeholder="手机号码"></el-input>
             </el-form-item>
             <el-form-item label="电子邮箱" prop="email">
                 <el-input v-model.trim="formAdd.email" clearable placeholder="电子邮箱"></el-input>
+            </el-form-item>
+            <el-form-item label="用户昵称" prop="nickName">
+                <el-input v-model.trim="formAdd.nickName" clearable placeholder="昵称"></el-input>
+            </el-form-item>
+            <el-form-item label="真实姓名" prop="realName">
+                <el-input v-model.trim="formAdd.realName" clearable placeholder="真实姓名"></el-input>
             </el-form-item>
             <el-form-item label="性别" prop="sex">
                 <el-radio-group v-model="formAdd.sex">
@@ -126,7 +126,7 @@
             <template slot-scope="scope">
                 <el-button
                         size="mini" type="primary" plain
-                        @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                        @click="handleEdit(scope.$index, scope.row)">修改</el-button>
                 <el-button
                         size="mini"
                         v-if="scope.row.isLock==0"
@@ -158,6 +158,7 @@
     var listApp=new Vue({
         el:"#listPanel",
         data:{
+            addUserDialogTitle:"新增用户",
             formSearch: {
                 userName:'',
                 mobile:'',
@@ -173,7 +174,8 @@
                 sex:0,
                 realName:'',
                 age:0,
-                remark:''
+                remark:'',
+                pwdishide:0
             },
             addRules:{
                 userName: [
@@ -278,16 +280,28 @@
                 this.$refs[formName].resetFields();
             },
             handleEdit(index, row) {
-                this.$refs['formAdd'].resetFields();
+                this.formAdd.userName="";
+                this.formAdd.userId=0;
+                this.formAdd.nickName="";
+                this.formAdd.realName="";
+                this.formAdd.email="";
+                this.formAdd.mobile="";
+                this.formAdd.age=0;
+                this.formAdd.sex=1;
+                this.formAdd.remark="";
+                this.addUserDialogTitle="修改用户";
+                this.formAdd.pwdishide=1;
+
                 this.$http.get("/user/get/"+row.userId).then(function(res2){
                     window.parent.app.loadingSwitch(false);
                     var addInfo=JSON.parse(res2.bodyText);
                     //alert(addInfo.message);
                     if(addInfo.code==200) {
-                        $("#formAddPassWord").hide();
+                        //$("#formAddPassWord").hide();
                         this.addUserDialog = true;
                         this.formAdd.userName=addInfo.data.userName;
                         this.formAdd.userId=addInfo.data.userId;
+                        this.formAdd.nickName=addInfo.data.nickName;
                         this.formAdd.realName=addInfo.data.realName;
                         this.formAdd.email=addInfo.data.email;
                         this.formAdd.mobile=addInfo.data.mobile;
@@ -306,8 +320,17 @@
             },
             handleAdd(){
                 this.addUserDialog = true;
-                this.$refs['formAdd'].resetFields();
-                $("#formAddPassWord").show();
+                this.formAdd.pwdishide=0;
+                this.addUserDialogTitle="新增用户";
+                this.formAdd.userName="";
+                this.formAdd.userId=0;
+                this.formAdd.nickName="";
+                this.formAdd.realName="";
+                this.formAdd.email="";
+                this.formAdd.mobile="";
+                this.formAdd.age=0;
+                this.formAdd.sex=0;
+                this.formAdd.remark="";
             },
             handleDelete(index, row) {
                 var tmpUid=row.userId;

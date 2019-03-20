@@ -8,40 +8,86 @@
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
     <title>部门管理</title>
+    <style>
+        .custom-tree-node {
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            padding-right: 8px;
+        }
+    </style>
 </head>
 <body>
 <div id="listPanel">
-    <el-table
-            :data="tableData"
-            border
-            stripe
-            style="width: 100%">
-        <el-table-column
-                prop="date"
-                label="日期"
-                width="180">
-        </el-table-column>
-        <el-table-column
-                prop="name"
-                label="姓名"
-                width="180">
-        </el-table-column>
-        <el-table-column
-                prop="address"
-                label="地址">
-        </el-table-column>
-        <el-table-column label="操作">
-            <template slot-scope="scope">
-                <el-button
-                        size="mini"
-                        @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                <el-button
-                        size="mini"
-                        type="danger"
-                        @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-            </template>
-        </el-table-column>
-    </el-table>
+    <div style="width:500px;">
+        <el-input
+                placeholder="输入部门关键字" clearable
+                v-model="filterText" size="small">
+            <template slot="prepend">部门名称：</template>
+        </el-input>
+    </div>
+    <el-dialog :title="deptDialogTitle" :visible.sync="dialogDeptVisible">
+        <el-form :model="formDept" :rules="rulesDept" ref="formDept"  label-width="100px">
+            <el-form-item label="上级名称">
+                <el-tag>{{formDept.parentName}}</el-tag>
+            </el-form-item>
+            <el-form-item label="部门名称" prop="deptname">
+                <el-input v-model.trim="formDept.deptname" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="显示顺序" prop="deptno">
+                <template>
+                    <el-input-number v-model="formDept.deptno" :min="1" :max="100" label="显示顺序"></el-input-number>
+                </template>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogDeptVisible = false">取 消</el-button>
+            <el-button type="primary" @click="updateDept('formDept')">保 存</el-button>
+        </div>
+    </el-dialog>
+    <el-dialog :title="editPostDialogTitle" :visible.sync="dialogEditPostVisible">
+        <el-tree
+                ref="posttree"
+                :data="datatreepost"
+                show-checkbox
+                node-key="id"
+                @check="checkPostChange"
+                :default-expanded-keys="defCheckedPost"
+                :default-checked-keys="defCheckedPost"
+                :props="defaultProps">
+        </el-tree>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogEditPostVisible = false">关 闭</el-button>
+        </div>
+    </el-dialog>
+    <div class="block">
+        <el-tree
+                ref="tree"
+                :data="treedata"
+                node-key="id"
+                draggable
+                @node-drag-start="handleDragStart"
+                @node-drag-enter="handleDragEnter"
+                @node-drag-leave="handleDragLeave"
+                @node-drag-over="handleDragOver"
+                @node-drag-end="handleDragEnd"
+                @node-drop="handleDrop"
+                :allow-drag="allowDrop"
+                :allow-drop="allowDrag"
+                :filter-node-method="filterNode"
+                :props="defaultProps">
+      <span class="custom-tree-node" slot-scope="{ node, data }">
+        <i :class="el-icon-tickets"></i>
+        <span>{{ node.label }}</span>
+        <span style="margin-left: 12px;">
+          <el-button type="text" size="mini" @click.stop="append(data)">添加</el-button>
+            <el-button type="text" size="mini" @click.stop="edit(data)">编辑</el-button>
+          <el-button type="text" size="mini" @click.stop="remove(node, data)">删除</el-button>
+            <el-button type="text" size="mini" @click.stop="editpost(data)">关联岗位</el-button>
+        </span>
+      </span>
+        </el-tree>
+    </div>
 </div>
 </body>
 </html>
@@ -49,38 +95,222 @@
     var listApp=new Vue({
         el:"#listPanel",
         data:{
-            tableData: [{
-                date: '2016-05-02',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1518 弄'
-            }, {
-                date: '2016-05-04',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1517 弄'
-            }, {
-                date: '2016-05-01',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1519 弄'
-            }, {
-                date: '2016-05-03',
-                name: '王小虎',
-                address: '上海市普陀区金沙江路 1516 弄'
-            }],
-            pager:{
-                pageSize:10,
-                currentPage:1,
-                totalCount:0
+            treedata: [],
+            datatreepost:[],
+            defCheckedPost:[],
+            defaultProps:{
+                children: 'children',
+                label: 'label'
+            },
+            dialogEditPostVisible:false,
+            editPostDialogTitle:"关联岗位",
+            deptDialogTitle:"新增部门",
+            dialogDeptVisible:false,
+            tmpDeptId:0,
+            filterText: '',
+            formDept:{
+                deptname:"",
+                deptno:1,
+                parentName:"",
+                id:0,
+                pid:0
+            },
+            rulesDept:{
+                deptname:[ { required: true, message: '请输入部门名称', trigger: 'blur' }]
+            },
+            tmpAddData:null,
+            treeurl:"/dept/childlist/"
+        },
+        watch:{
+            filterText(val) {
+                this.$refs.tree.filter(val);
             }
         },
         methods:{
             loadListData:function () {
+                window.parent.app.loadingSwitch(true);
+                this.$http.get(this.treeurl+"0").then(function(res) {
+                    this.treedata = res.data;
+                });
+                window.parent.app.loadingSwitch(false);
+            },
+            filterNode(value, data) {
+                if (!value) return true;
+                return data.label.toLowerCase().indexOf(value.toLowerCase()) !== -1;
+            },
+            append(data) {
+                this.dialogDeptVisible=true;
+                this.formDept.parentName=data.label;
+                this.formDept.pid=data.id;
+                this.formDept.deptname="";
+                this.formDept.deptno=1;
+                this.deptDialogTitle="新增部门";
+                this.tmpAddData=data;
+            },
+            edit(data) {
+                this.$http.get("/dept/get/"+data.id).then(function(res2){
+                    this.dialogDeptVisible=true;
+                    this.formDept.parentName=res2.data.parentName;
+                    this.formDept.deptname=data.label;
+                    this.formDept.pid=res2.data.parentId;
+                    this.formDept.id=data.id;
+                    this.deptDialogTitle="编辑部门";
+                    this.tmpAddData=data;
+                },function(){
+                    alert("同步失败！");
+                });
 
             },
-            handleEdit(index, row) {
-                console.log(index, row);
+            checkPostChange(data, checkObj) {
+                var paramJson={"deptId":this.tmpDeptId,"postId":data.id};
+                this.$http.post("/dept/savedeptpost",paramJson).then(function(res) {
+                    if(res.data<=0)
+                    {
+                        alert("操作失败！");
+                    }
+                });
             },
-            handleDelete(index, row) {
-                console.log(index, row);
+            editpost(data){
+                //关联岗位
+                this.dialogEditPostVisible=true;
+                this.editPostDialogTitle="【"+data.label+"】"+"关联岗位";
+                this.tmpDeptId=data.id;
+                window.parent.app.loadingSwitch(true);
+                //加载默认选中
+                this.$http.get("/dept/deptpost/"+data.id).then(function(res2) {
+                    this.defCheckedPost = res2.data;
+                });
+                this.$http.get("/post/childlist/0").then(function(res) {
+                    this.datatreepost = res.data;
+                });
+                window.parent.app.loadingSwitch(false);
+            },
+            remove(node, data) {
+                //判断是否有子项
+                if(data.children.length>0)
+                {
+                    alert("请先删除子项!");
+                }
+                else
+                {
+                    this.$http.get("/dept/del/"+data.id).then(function(res2){
+                        window.parent.app.loadingSwitch(false);
+                        if(res2.data>0) {
+                            alert("操作成功");
+                            node.remove();
+                        }
+                        else
+                        {
+                            alert("操作失败");
+                        }
+                    },function(){
+                        alert("同步失败！");
+                        window.parent.app.loadingSwitch(false);
+                    });
+                }
+            },
+            updateDept:function (formName) {
+                var isValid=true;
+                this.$refs[formName].validate(function(valid){
+                    if (!valid) {
+                        isValid=false;
+                        return false;
+                    }
+                });
+                if(!isValid)
+                {
+                    return;
+                }
+                //提交
+                var tmpDeptName=this.formDept.deptname;
+                var dataJson={"deptName":tmpDeptName,"parentId":this.formDept.pid,"id":this.formDept.id,"orderNo":this.formDept.deptno};
+                this.$http.post("/dept/edit",dataJson).then(function(res2){
+                    window.parent.app.loadingSwitch(false);
+                    if(res2.data>0) {
+                        var newItem={id:res2.data,label:tmpDeptName,children:[]};
+                        //新增
+                        if(this.formDept.id<=0)
+                        {
+                            this.tmpAddData.children.push(newItem);
+                        }
+                        else
+                        {
+                            this.tmpAddData.label=tmpDeptName;
+                        }
+                        this.$refs[formName].resetFields();
+                        this.dialogDeptVisible=false;
+                        alert("操作成功");
+                    }
+                    else if(res2.data<0)
+                    {
+                        alert("当前节点下已存在【"+this.formDept.deptname+"】");
+                    }
+                    else
+                    {
+                        alert("操作失败");
+                    }
+                },function(){
+                    alert("同步失败！");
+                    window.parent.app.loadingSwitch(false);
+                });
+            },
+            allowDrop(draggingNode, dropNode, type) {
+                //目标节点能否被放置
+                /*if(type=='inner')
+                {
+                    return false;
+                }
+                else {*/
+                    return true;
+                //}
+            },
+            allowDrag(draggingNode) {
+                //节点能否被拖拽
+                if(draggingNode.level==1)
+                {
+                    return false;
+                }
+                else {
+                    return true;
+                }
+            },
+            handleDragStart(node, ev) {
+                //console.log('drag start', node);
+            },
+            handleDragEnter(draggingNode, dropNode, ev) {
+                //console.log('tree drag enter: ', dropNode.label);
+            },
+            handleDragLeave(draggingNode, dropNode, ev) {
+                //console.log('tree drag leave: ', dropNode.label);
+            },
+            handleDragOver(draggingNode, dropNode, ev) {
+                //console.log('tree drag over: ', dropNode.label);
+            },
+            handleDragEnd(draggingNode, dropNode, dropType, ev) {
+               //console.log('tree drag end: ', dropNode && dropNode.label, dropType);
+            },
+            handleDrop(draggingNode, dropNode, dropType, ev) {
+                var tmpDropParent=-1;
+                var tmpNewNodeId=dropNode.data.id;
+                var tmpOldNodeId=draggingNode.data.id;
+                if(dropType=='inner')
+                {
+                    tmpDropParent=dropNode.data.id;
+                }
+                var dataJson={"id":tmpOldNodeId,'dragNodeId':tmpNewNodeId,"parentId":tmpDropParent,"dragType":dropType};
+                this.$http.post("/dept/drag",dataJson).then(function(res2){
+                    window.parent.app.loadingSwitch(false);
+                    if(res2.data>0) {
+                        alert("操作成功");
+                    }
+                    else
+                    {
+                        alert("操作失败");
+                    }
+                },function(){
+                    alert("同步失败！");
+                    window.parent.app.loadingSwitch(false);
+                });
             }
         }
     });

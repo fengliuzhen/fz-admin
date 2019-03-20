@@ -70,7 +70,12 @@
     <el-container id="container1">
         <el-header style="padding-left: 0px;">
             <el-row :gutter="20">
-                <el-col :span="3"><div class="grid-content bg-purple" style="width:200px;text-align: center;"><label th:text="${sysname}" style="color: #ffffff;font-size: 18px;font-family: 'Microsoft YaHei UI';"></label></div></el-col>
+                <el-col :span="3">
+                    <div class="grid-content bg-purple" style="width:200px;text-align: center;">
+                        <el-button  type="primary" icon="el-icon-news" circle></el-button>
+                        <label th:text="${sysname}" style="color: #ffffff;font-size: 18px;font-family: 'Microsoft YaHei UI';"></label>
+                    </div>
+                </el-col>
                 <el-col :span="9"><div class="grid-content bg-purple">&nbsp;</div>
                 </el-col>
                 <el-col :span="4"><div class="grid-content bg-purple">&nbsp;</div></el-col>
@@ -145,31 +150,19 @@
             width="30%"
             :before-close="handleClose">
         <el-form ref="formInfo" :model="formInfo" label-width="80px">
-            <el-form-item label="用户名：">
-                <label v-text="formInfo.userName"></label>
-            </el-form-item>
-            <el-form-item label="昵称：">
-                <label v-text="formInfo.nickName"></label>
-            </el-form-item>
-            <el-form-item label="真实姓名：">
-                <label v-text="formInfo.realName"></label>
-            </el-form-item>
-            <el-form-item label="部门：">
-                <label v-text="formInfo.deptName"></label>
-            </el-form-item>
-            <el-form-item label="岗位：">
-                <label v-text="formInfo.postName"></label>
-            </el-form-item>
-            <el-form-item label=手机：">
-                <label v-text="formInfo.mobile"></label>
-            </el-form-item>
-            <el-form-item label="邮箱：">
-                <label v-text="formInfo.email"></label>
+            <el-form-item>
+                用户名：<span v-text="formInfo.userName"></span><br/>
+                昵称：<span v-text="formInfo.nickName"></span><br/>
+                真名：<span v-text="formInfo.realName"></span><br/>
+                部门：<span v-text="formInfo.deptName"></span><br/>
+                岗位：<span v-text="formInfo.postName"></span><br/>
+                手机：<span v-text="formInfo.mobile"></span><br/>
+                邮箱：<span v-text="formInfo.email"></span>
             </el-form-item>
         </el-form>
-        <span slot="footer" class="dialog-footer">
-    <el-button @click="dialogVisible = false">关 闭</el-button>
-  </span>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">关 闭</el-button>
+        </div>
     </el-dialog>
 </div>
 </body>
@@ -302,15 +295,16 @@
                         this.loadingSwitch(false);
                         var addInfo=JSON.parse(res2.bodyText);
                         if(addInfo.code==200) {
-                            this.dialogVisible = true;
                             this.formInfo.userName=addInfo.data.userName;
-                            this.formAdd.realName=addInfo.data.realName;
-                            this.formAdd.email=addInfo.data.email;
-                            this.formAdd.mobile=addInfo.data.mobile;
-                            this.formAdd.age=addInfo.data.age;
-                            this.formAdd.sex=addInfo.data.sex;
-                            this.formAdd.postName=addInfo.data.postName;
-                            this.formAdd.deptName=addInfo.data.deptName;
+                            this.formInfo.realName=addInfo.data.realName;
+                            this.formInfo.nickName=addInfo.data.nickName;
+                            this.formInfo.email=addInfo.data.email;
+                            this.formInfo.mobile=addInfo.data.mobile;
+                            this.formInfo.age=addInfo.data.age;
+                            this.formInfo.sex=addInfo.data.sex;
+                            this.formInfo.postName=addInfo.data.postName;
+                            this.formInfo.deptName=addInfo.data.deptName;
+                            this.dialogVisible = true;
                         }
                         else
                         {
@@ -331,7 +325,7 @@
                 var isValid=true;
                 this.$refs[formName].validate(function(valid){
                     if (!valid) {
-                        alert("密码不符合要求");
+                        //alert("密码不符合要求");
                         isValid=false;
                         return false;
                     }
@@ -349,6 +343,7 @@
                         alert(addInfo.message);
                         this.$refs['formPwd'].resetFields();
                         this.dialogPwdVisible=false;
+                        window.location.href="/login";
                     }
                     else
                     {

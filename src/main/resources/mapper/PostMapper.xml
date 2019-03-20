@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fz.admin.dao.PostDao">
+    <select id="getPostTreeList"  resultType="com.fz.admin.entity.PostTreeEntity" parameterType="java.lang.Integer">
+        SELECT id,sd.postname label FROM sys_post sd WHERE sd.parentid=#{id} AND sd.datastate=1 ORDER BY sd.orderno
+    </select>
+    <select id="getPostEntity"  resultType="com.fz.admin.entity.PostEntity" parameterType="java.lang.Integer">
+        SELECT sd.*,sd1.postname parentName FROM sys_post sd LEFT JOIN sys_post sd1 ON sd.parentid=sd1.id WHERE sd.id=#{id,jdbcType=INTEGER};
+    </select>
+    <select id="getPostEntityByName"  resultType="com.fz.admin.entity.PostEntity" parameterType="java.util.Map">
+        SELECT * FROM sys_post sd WHERE sd.postname=#{postName,jdbcType=VARCHAR} AND sd.parentid=#{parentId,jdbcType=INTEGER}
+    </select>
+    <select id="getPostMaxOrderNo"  resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        SELECT IFNULL(max(sd.orderno),1) FROM sys_post sd WHERE sd.parentid=#{parentId,jdbcType=INTEGER}
+    </select>
+    <select id="getPostIdsByDeptId" resultType="java.lang.String" parameterType="java.lang.Integer">
+        SELECT GROUP_CONCAT(sdp.postid) ids FROM sys_dept_post sdp WHERE sdp.datastate=1 AND sdp.deptid=#{deptId,jdbcType=INTEGER}
+    </select>
+    <insert id="addPost" parameterType="com.fz.admin.entity.PostEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_post(postname,parentid,orderno,datastate,addtime,adduid,lastedittime,lastedituid,remark)
+        VALUES(#{postName,jdbcType=VARCHAR},#{parentId,jdbcType=INTEGER},#{orderNo,jdbcType=INTEGER},#{dataState,jdbcType=INTEGER},
+        #{addTime,jdbcType=INTEGER},#{addUid,jdbcType=INTEGER},#{lastEditTime,jdbcType=INTEGER},#{lastEditUid,jdbcType=INTEGER},#{remark,jdbcType=VARCHAR});
+    </insert>
+    <update id="updatePost" parameterType="com.fz.admin.entity.PostEntity">
+        UPDATE sys_post sd
+        <set>
+            <if test="parentId!=null and parentId>-1">
+                sd.parentid=#{parentId,jdbcType=INTEGER},
+            </if>
+            <if test="orderNo!=null and orderNo>0">
+                sd.orderno=#{orderNo,jdbcType=INTEGER},
+            </if>
+            <if test="postname!=null and postname!=''">
+                sd.postname=#{postName,jdbcType=VARCHAR},
+            </if>
+            sd.lastedittime=#{lastEditTime,jdbcType=INTEGER},
+            sd.lastedituid=#{lastEditUid,jdbcType=INTEGER}
+        </set>
+         WHERE sd.id=#{id,jdbcType=INTEGER};
+    </update>
+    <update id="updateDragPost" parameterType="com.fz.admin.entity.PostDragEntity">
+        UPDATE sys_post sd
+        <set>
+            <if test="dragNodeParentId!=null and dragNodeParentId>-1">
+                sd.parentid=#{dragNodeParentId,jdbcType=INTEGER},
+            </if>
+            <if test="orderNo!=null and orderNo>0">
+                sd.orderno=#{orderNo,jdbcType=INTEGER},
+            </if>
+            sd.lastedittime=#{lastEditTime,jdbcType=INTEGER},
+            sd.lastedituid=#{lastEditUid,jdbcType=INTEGER}
+        </set>
+        WHERE sd.id=#{id,jdbcType=INTEGER};
+    </update>
+    <update id="updateDragOldPostOrderNo" parameterType="com.fz.admin.entity.PostDragEntity">
+       UPDATE sys_post sdd set sdd.orderno=#{dragNodeOrderNo,jdbcType=INTEGER},sdd.lastedittime=#{lastEditTime,jdbcType=INTEGER},sdd.lastedituid=#{lastEditUid,jdbcType=INTEGER} WHERE sdd.id=#{dragNodeId,jdbcType=INTEGER};
+    </update>
+    <update id="updateDragPostOrderNo" parameterType="com.fz.admin.entity.PostDragEntity">
+        UPDATE sys_post sd set
+            sd.orderno=sd.orderno+1,
+            sd.lastedittime=#{lastEditTime,jdbcType=INTEGER},
+            sd.lastedituid=#{lastEditUid,jdbcType=INTEGER}
+        WHERE sd.parentId=#{dragNodeParentId,jdbcType=INTEGER} and sd.orderno &gt; #{orderNo,jdbcType=INTEGER};
+    </update>
+    <update id="updateState" parameterType="java.util.Map">
+            UPDATE sys_post sd set sd.datastate=#{datastate,jdbcType=INTEGER} WHERE sd.id=#{id,jdbcType=INTEGER};
+    </update>
+</mapper>

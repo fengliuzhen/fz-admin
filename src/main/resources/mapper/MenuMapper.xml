@@ -7,7 +7,7 @@
   LEFT JOIN sys_role_menu srm ON sr.id=srm.roleid
   LEFT JOIN sys_menu sm ON srm.menuid=sm.id
   WHERE sur.datastate=1 AND srm.datastate=1 AND sm.datastate=1
-AND sm.showtype=0 AND sur.userid=#{uid,jdbcType=INTEGER} GROUP BY sm.id
+AND sm.showtype=0 AND sur.userid=#{uid,jdbcType=INTEGER} GROUP BY sm.id ORDER BY sm.orderno
     </select>
     <select id="getIsHavePower" resultType="java.lang.Integer" parameterType="java.util.Map">
         SELECT sm.id FROM sys_user_role sur LEFT JOIN sys_role_menu srm ON sur.roleid=srm.roleid

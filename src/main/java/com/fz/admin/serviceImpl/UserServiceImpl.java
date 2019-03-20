@@ -69,6 +69,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public PageInfo<UserEntity> getUserByRoleId(UserEntity userEntity) {
+        PageHelper.startPage(userEntity.getPageNum(), userEntity.getPageSize());
+        List<UserEntity> list = userDao.getUserByRoleId(userEntity);
+        PageInfo<UserEntity> pageInfo=new PageInfo<>(list);
+        return pageInfo;
+    }
+
+    @Override
     @Transactional
     public int updateLock(SysLog sysLog) {
         try {

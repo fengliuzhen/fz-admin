@@ -16,6 +16,7 @@ public interface UserDao {
     int updateUser(AddUserEntity addUserEntity);
     UserEntity getUserModelByName(@Param("userName")String userName);
     UserEntity getUserModelById(@Param("userId")int userId);
+    List<UserEntity> getUserByRoleId(UserEntity userEntity);
     int updateLock(SysLog sysLog);
     int updatePwd(AddUserEntity addUserEntity);
 }

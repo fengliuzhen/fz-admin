@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html;charset=UTF-8"/>
+    <link th:href="@{~/element-ui/index.css}" rel="stylesheet" />
+    <script type="application/javascript" th:src="@{~/js/vue.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
+    <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
+    <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
+    <title>菜单管理</title>
+</head>
+<body>
+<div id="listPanel">
+    菜单列表
+</div>
+</body>
+</html>
+<script type="application/javascript">
+    var listApp=new Vue({
+        el:"#listPanel",
+        data:{
+
+        },
+        methods:{
+            loadListData:function () {
+
+            }
+        }
+    });
+    listApp.loadListData();
+</script>

@@ -7,7 +7,7 @@
     <script type="application/javascript" th:src="@{~/js/vue-resource.js}"></script>
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
-    <title>岗位管理</title>
+    <title>角色管理</title>
     <style>
         .custom-tree-node {
             align-items: center;
@@ -21,28 +21,69 @@
 <div id="listPanel">
     <div style="width:500px;">
         <el-input
-                placeholder="输入岗位关键字" clearable
+                placeholder="输入角色关键字" clearable
                 v-model="filterText" size="small">
-            <template slot="prepend">岗位名称：</template>
+            <template slot="prepend">角色名称：</template>
         </el-input>
     </div>
-    <el-dialog :title="postDialogTitle" :visible.sync="dialogPostVisible">
-        <el-form :model="formPost" :rules="rulesPost" ref="formPost"  label-width="100px">
+    <el-dialog :title="roleDialogTitle" :visible.sync="dialogRoleVisible">
+        <el-form :model="formRole" :rules="rulesRole" ref="formRole"  label-width="100px">
             <el-form-item label="上级名称">
-                <el-tag>{{formPost.parentName}}</el-tag>
+                <el-tag>{{formRole.parentName}}</el-tag>
             </el-form-item>
-            <el-form-item label="岗位名称" prop="postname">
-                <el-input v-model.trim="formPost.postname" autocomplete="off"></el-input>
+            <el-form-item label="角色名称" prop="rolename">
+                <el-input v-model.trim="formRole.rolename" autocomplete="off"></el-input>
             </el-form-item>
-            <el-form-item label="显示顺序" prop="postno">
+            <el-form-item label="显示顺序" prop="roleno">
                 <template>
-                    <el-input-number v-model="formPost.postno" :min="1" :max="100" label="显示顺序"></el-input-number>
+                    <el-input-number v-model="formRole.roleno" :min="1" :max="100" label="显示顺序"></el-input-number>
                 </template>
             </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
-            <el-button @click="dialogPostVisible = false">取 消</el-button>
-            <el-button type="primary" @click="updatePost('formPost')">保 存</el-button>
+            <el-button @click="dialogRoleVisible = false">取 消</el-button>
+            <el-button type="primary" @click="updateRole('formRole')">保 存</el-button>
+        </div>
+    </el-dialog>
+    <el-dialog :title="roleUserDialogTitle" :visible.sync="dialogRoleUserVisible">
+        <el-table
+                :data="userListData"
+                border
+                stripe
+                fit="true"
+                style="width: 100%">
+            <el-table-column type="index" label="序号" width="60px"></el-table-column>
+            <el-table-column
+                    prop="userId"
+                    label="用户ID">
+            </el-table-column>
+            <el-table-column
+                    prop="userName"
+                    label="用户名">
+            </el-table-column>
+            <el-table-column
+                    prop="realName"
+                    label="真实姓名">
+            </el-table-column>
+            <el-table-column
+                    prop="isLock"
+                    label="是否锁定">
+                <template slot-scope="scope">
+                    <span class="red" v-if="scope.row.isLock==1"><b>锁定</b></span>
+                    <span class="green" v-else-if="scope.row.isLock==0"><b>正常</b></span>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div align="center">
+            <el-pagination
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="pager.currentPage"
+                    :page-sizes="[5,10,20,30]"
+                    :page-size="pager.pagesize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="pager.totalCount">
+            </el-pagination>
         </div>
     </el-dialog>
     <div class="block">
@@ -66,8 +107,10 @@
         <span>{{ node.label }}</span>
         <span style="margin-left: 12px;">
           <el-button type="text" size="mini" @click.stop="append(data)">添加</el-button>
-            <el-button type="text" size="mini" @click.stop="edit(data)">编辑</el-button>
+          <el-button type="text" size="mini" @click.stop="edit(data)">编辑</el-button>
           <el-button type="text" size="mini" @click.stop="remove(node, data)">删除</el-button>
+          <el-button type="text" size="mini" @click.stop="viewUser(data)">查看用户</el-button>
+            <el-button type="text" size="mini" @click.stop="editMenu(data)">设置菜单</el-button>
         </span>
       </span>
         </el-tree>
@@ -80,25 +123,34 @@
         el:"#listPanel",
         data:{
             treedata: [],
+            userListData:[],
             defaultProps:{
                 children: 'children',
                 label: 'label'
             },
-            postDialogTitle:"新增岗位",
-            dialogPostVisible:false,
+            roleDialogTitle:"新增角色",
+            roleUserDialogTitle:"角色关联列表",
+            dialogRoleUserVisible:false,
+            dialogRoleVisible:false,
             filterText: '',
-            formPost:{
-                postname:"",
-                postno:1,
+            emulateJSON:false,
+            pager:{
+                pageSize:10,
+                currentPage:1,
+                totalCount:0
+            },
+            formRole:{
+                rolename:"",
+                roleno:1,
                 parentName:"",
                 id:0,
                 pid:0
             },
-            rulesPost:{
-                postname:[ { required: true, message: '请输入岗位名称', trigger: 'blur' }]
+            rulesRole:{
+                rolename:[ { required: true, message: '请输入角色名称', trigger: 'blur' }]
             },
             tmpAddData:null,
-            treeurl:"/post/childlist/"
+            treeurl:"/role/childlist/"
         },
         watch:{
             filterText(val) {
@@ -118,26 +170,45 @@
                 return data.label.toLowerCase().indexOf(value.toLowerCase()) !== -1;
             },
             append(data) {
-                this.dialogPostVisible=true;
-                this.formPost.parentName=data.label;
-                this.formPost.pid=data.id;
-                this.formPost.postname="";
-                this.formPost.postno=1;
-                this.postDialogTitle="新增岗位";
+                this.dialogRoleVisible=true;
+                this.formRole.parentName=data.label;
+                this.formRole.pid=data.id;
+                this.formRole.rolename="";
+                this.formRole.roleno=1;
+                this.roleDialogTitle="新增角色";
                 this.tmpAddData=data;
             },
             edit(data) {
-                this.$http.get("/post/get/"+data.id).then(function(res2){
-                    this.dialogPostVisible=true;
-                    this.formPost.parentName=res2.data.parentName;
-                    this.formPost.postname=data.label;
-                    this.formPost.pid=res2.data.parentId;
-                    this.formPost.id=data.id;
-                    this.postDialogTitle="编辑岗位";
+                this.$http.get("/role/get/"+data.id).then(function(res2){
+                    this.dialogRoleVisible=true;
+                    this.formRole.parentName=res2.data.parentName;
+                    this.formRole.rolename=data.label;
+                    this.formRole.pid=res2.data.parentId;
+                    this.formRole.id=data.id;
+                    this.roleDialogTitle="编辑角色";
                     this.tmpAddData=data;
                 },function(){
                     alert("同步失败！");
                 });
+
+            },
+            viewUser(data){
+                //查看用户
+                this.dialogRoleUserVisible=true;
+                this.roleUserDialogTitle="角色【"+data.label+"】用户列表";
+                window.parent.app.loadingSwitch(true);
+                var paramsJson={
+                    userId:data.id,
+                    pageNum:this.pager.currentPage,
+                    pageSize:this.pager.pageSize};
+                this.$http.post("/user/userlist/roleid",paramsJson).then(function(res) {
+                    this.userListData = res.data.datalist;
+                    this.pager.totalCount = res.data.number;
+                });
+                window.parent.app.loadingSwitch(false);
+            },
+            editMenu(data){
+                //关联菜单
 
             },
             remove(node, data) {
@@ -148,7 +219,7 @@
                 }
                 else
                 {
-                    this.$http.get("/post/del/"+data.id).then(function(res2){
+                    this.$http.get("/role/del/"+data.id).then(function(res2){
                         window.parent.app.loadingSwitch(false);
                         if(res2.data>0) {
                             alert("操作成功");
@@ -164,7 +235,7 @@
                     });
                 }
             },
-            updatePost:function (formName) {
+            updateRole:function (formName) {
                 var isValid=true;
                 this.$refs[formName].validate(function(valid){
                     if (!valid) {
@@ -177,28 +248,28 @@
                     return;
                 }
                 //提交
-                var tmpPostName=this.formPost.postname;
-                var dataJson={"postName":tmpPostName,"parentId":this.formPost.pid,"id":this.formPost.id,"orderNo":this.formPost.postno};
-                this.$http.post("/post/edit",dataJson).then(function(res2){
+                var tmpRoleName=this.formRole.rolename;
+                var dataJson={"roleName":tmpRoleName,"parentId":this.formRole.pid,"id":this.formRole.id,"orderNo":this.formRole.roleno};
+                this.$http.post("/role/edit",dataJson).then(function(res2){
                     window.parent.app.loadingSwitch(false);
                     if(res2.data>0) {
-                        var newItem={id:res2.data,label:tmpPostName,children:[]};
+                        var newItem={id:res2.data,label:tmpRoleName,children:[]};
                         //新增
-                        if(this.formPost.id<=0)
+                        if(this.formRole.id<=0)
                         {
                             this.tmpAddData.children.push(newItem);
                         }
                         else
                         {
-                            this.tmpAddData.label=tmpPostName;
+                            this.tmpAddData.label=tmpRoleName;
                         }
                         this.$refs[formName].resetFields();
-                        this.dialogPostVisible=false;
+                        this.dialogRoleVisible=false;
                         alert("操作成功");
                     }
                     else if(res2.data<0)
                     {
-                        alert("当前节点下已存在【"+this.formPost.postname+"】");
+                        alert("当前节点下已存在【"+this.formRole.rolename+"】");
                     }
                     else
                     {
@@ -216,7 +287,7 @@
                     return false;
                 }
                 else {*/
-                return true;
+                    return true;
                 //}
             },
             allowDrag(draggingNode) {
@@ -242,7 +313,7 @@
                 //console.log('tree drag over: ', dropNode.label);
             },
             handleDragEnd(draggingNode, dropNode, dropType, ev) {
-                //console.log('tree drag end: ', dropNode && dropNode.label, dropType);
+               //console.log('tree drag end: ', dropNode && dropNode.label, dropType);
             },
             handleDrop(draggingNode, dropNode, dropType, ev) {
                 var tmpDropParent=-1;
@@ -253,7 +324,7 @@
                     tmpDropParent=dropNode.data.id;
                 }
                 var dataJson={"id":tmpOldNodeId,'dragNodeId':tmpNewNodeId,"parentId":tmpDropParent,"dragType":dropType};
-                this.$http.post("/post/drag",dataJson).then(function(res2){
+                this.$http.post("/role/drag",dataJson).then(function(res2){
                     window.parent.app.loadingSwitch(false);
                     if(res2.data>0) {
                         alert("操作成功");

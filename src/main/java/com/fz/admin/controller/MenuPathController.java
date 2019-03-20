@@ -29,4 +29,14 @@ public class MenuPathController {
     {
         return "system/loglist";
     }
+    @RequestMapping(value = "/rolepower/rolelist",method = RequestMethod.GET)
+    public String RoleList(Model model)
+    {
+        return "rolepower/rolelist";
+    }
+    @RequestMapping(value = "/rolepower/menulist",method = RequestMethod.GET)
+    public String MenuList(Model model)
+    {
+        return "rolepower/menulist";
+    }
 }

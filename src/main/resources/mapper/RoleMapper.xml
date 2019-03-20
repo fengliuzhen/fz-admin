@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fz.admin.dao.RoleDao">
+    <select id="getRoleTreeList"  resultType="com.fz.admin.entity.RoleTreeEntity" parameterType="java.lang.Integer">
+        SELECT id,sd.rolename label FROM sys_role sd WHERE sd.parentid=#{id} AND sd.datastate=1 ORDER BY sd.orderno
+    </select>
+    <select id="getRoleEntity"  resultType="com.fz.admin.entity.RoleEntity" parameterType="java.lang.Integer">
+        SELECT sd.*,sd1.rolename parentName FROM sys_role sd LEFT JOIN sys_role sd1 ON sd.parentid=sd1.id WHERE sd.id=#{id,jdbcType=INTEGER};
+    </select>
+    <select id="getRoleEntityByName"  resultType="com.fz.admin.entity.RoleEntity" parameterType="java.util.Map">
+        SELECT * FROM sys_role sd WHERE sd.rolename=#{roleName,jdbcType=VARCHAR} AND sd.parentid=#{parentId,jdbcType=INTEGER}
+    </select>
+    <select id="getRoleMaxOrderNo"  resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        SELECT IFNULL(max(sd.orderno),1) FROM sys_role sd WHERE sd.parentid=#{parentId,jdbcType=INTEGER}
+    </select>
+    <insert id="addRole" parameterType="com.fz.admin.entity.RoleEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_role(rolename,parentid,orderno,datastate,addtime,adduid,lastedittime,lastedituid,remark)
+        VALUES(#{roleName,jdbcType=VARCHAR},#{parentId,jdbcType=INTEGER},#{orderNo,jdbcType=INTEGER},#{dataState,jdbcType=INTEGER},
+        #{addTime,jdbcType=INTEGER},#{addUid,jdbcType=INTEGER},#{lastEditTime,jdbcType=INTEGER},#{lastEditUid,jdbcType=INTEGER},#{remark,jdbcType=VARCHAR});
+    </insert>
+    <update id="updateRole" parameterType="com.fz.admin.entity.RoleEntity">
+        UPDATE sys_role sd
+        <set>
+            <if test="parentId!=null and parentId>-1">
+                sd.parentid=#{parentId,jdbcType=INTEGER},
+            </if>
+            <if test="orderNo!=null and orderNo>0">
+                sd.orderno=#{orderNo,jdbcType=INTEGER},
+            </if>
+            <if test="rolename!=null and rolename!=''">
+                sd.rolename=#{roleName,jdbcType=VARCHAR},
+            </if>
+            sd.lastedittime=#{lastEditTime,jdbcType=INTEGER},
+            sd.lastedituid=#{lastEditUid,jdbcType=INTEGER}
+        </set>
+         WHERE sd.id=#{id,jdbcType=INTEGER};
+    </update>
+    <update id="updateDragRole" parameterType="com.fz.admin.entity.RoleDragEntity">
+        UPDATE sys_role sd
+        <set>
+            <if test="parentId!=null and parentId>-1">
+                sd.parentid=#{parentId,jdbcType=INTEGER},
+            </if>
+            <if test="orderNo!=null and orderNo>0">
+                sd.orderno=#{orderNo,jdbcType=INTEGER},
+            </if>
+            sd.lastedittime=#{lastEditTime,jdbcType=INTEGER},
+            sd.lastedituid=#{lastEditUid,jdbcType=INTEGER}
+        </set>
+        WHERE sd.id=#{id,jdbcType=INTEGER};
+    </update>
+    <update id="updateDragOldRoleOrderNo" parameterType="com.fz.admin.entity.RoleDragEntity">
+       UPDATE sys_role sdd set sdd.orderno=#{dragNodeOrderNo,jdbcType=INTEGER},sdd.lastedittime=#{lastEditTime,jdbcType=INTEGER},sdd.lastedituid=#{lastEditUid,jdbcType=INTEGER} WHERE sdd.id=#{dragNodeId,jdbcType=INTEGER};
+    </update>
+    <update id="updateDragRoleOrderNo" parameterType="com.fz.admin.entity.RoleDragEntity">
+        UPDATE sys_role sd set
+            sd.orderno=sd.orderno+1,
+            sd.lastedittime=#{lastEditTime,jdbcType=INTEGER},
+            sd.lastedituid=#{lastEditUid,jdbcType=INTEGER}
+        WHERE sd.parentId=#{dragNodeParentId,jdbcType=INTEGER} and sd.orderno &gt; #{orderNo,jdbcType=INTEGER};
+    </update>
+    <update id="updateState" parameterType="java.util.Map">
+            UPDATE sys_role sd set sd.datastate=#{datastate,jdbcType=INTEGER} WHERE sd.id=#{id,jdbcType=INTEGER};
+    </update>
+</mapper>

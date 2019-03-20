@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -73,7 +74,7 @@ public class UserController extends BaseController {
         return resultModel;
     }
     @RequestMapping(value="/get/{userid}",method = RequestMethod.GET)
-    public APIResultModel<UserEntity> getGoods(@PathVariable("userid")int userid) throws Exception
+    public APIResultModel<UserEntity> getUser(@PathVariable("userid")int userid) throws Exception
     {
         APIResultModel<UserEntity> resultModel=new APIResultModel<>();
         //验证用户名是否重复
@@ -81,10 +82,19 @@ public class UserController extends BaseController {
         {
             userid=GetCureenUser().getUserId();
         }
-        UserEntity userEntity=userService.getUserModelById(userid);
+        UserEntity userEntity=userService.getUserBaseInfo(userid);
         resultModel.setData(userEntity);
         resultModel.setSuccess("200","success");
         return resultModel;
+    }
+    @RequestMapping(value="/userlist/roleid",method = RequestMethod.POST,consumes ="application/json")
+    public Map<String, Object> getUserByRoleId(@RequestBody UserEntity userEntity) throws Exception
+    {
+        PageInfo<UserEntity> pageList=userService.getUserByRoleId(userEntity);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("datalist", pageList.getList());
+        map.put("number", pageList.getTotal());
+        return map;
     }
     @RequestMapping(value="/udpatelock",method = RequestMethod.POST,consumes="application/json")
     public APIResultModel<Integer> UpdateLock(@RequestBody AddUserEntity addUserEntity) throws Exception
