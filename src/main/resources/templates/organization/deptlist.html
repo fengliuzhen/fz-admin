@@ -144,6 +144,11 @@
                 this.formDept.pid=data.id;
                 this.formDept.deptname="";
                 this.formDept.deptno=1;
+                this.$http.get("/dept/get/maxorderno/"+data.id).then(function(res2){
+                    this.formDept.deptno=res2.data+1;
+                },function(){
+                    alert("同步失败！");
+                });
                 this.deptDialogTitle="新增部门";
                 this.tmpAddData=data;
             },
@@ -154,6 +159,7 @@
                     this.formDept.deptname=data.label;
                     this.formDept.pid=res2.data.parentId;
                     this.formDept.id=data.id;
+                    this.formDept.deptno=res2.data.deptno;
                     this.deptDialogTitle="编辑部门";
                     this.tmpAddData=data;
                 },function(){

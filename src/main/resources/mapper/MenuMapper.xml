@@ -15,4 +15,10 @@ AND sm.showtype=0 AND sur.userid=#{uid,jdbcType=INTEGER} GROUP BY sm.id ORDER BY
   WHERE sur.datastate=1 AND srm.datastate=1 AND sm.datastate=1
   AND sur.userid=#{userId,jdbcType=INTEGER} AND sm.path=#{menuPath,jdbcType=VARCHAR};
     </select>
+    <select id="getMenuTreeList"  resultType="com.fz.admin.entity.MenuTreeEntity" parameterType="java.lang.Integer">
+        SELECT id,sm.menuname label FROM sys_menu sm WHERE sm.parentid=#{id} AND sm.datastate=1 ORDER BY sm.orderno
+    </select>
+    <select id="getMenuListByPid" parameterType="java.lang.Integer" resultType="com.fz.admin.entity.MenuTableEntity">
+        SELECT id,sm.menuname name,sm.parentid pid,sm.icon,sm.path,sm.orderno,sm.showtype,sm.addtime FROM sys_menu sm WHERE sm.parentid=#{pid}
+    </select>
 </mapper>

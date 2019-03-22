@@ -86,6 +86,23 @@
             </el-pagination>
         </div>
     </el-dialog>
+
+    <el-dialog :title="editMenuDialogTitle" :visible.sync="dialogEditMenuVisible">
+        <el-tree
+                ref="menutree"
+                :data="datatreemenu"
+                show-checkbox
+                node-key="id"
+                @check="checkMenuChange"
+                :default-expanded-keys="defCheckedMenu"
+                :default-checked-keys="defCheckedMenu"
+                :props="defaultProps">
+        </el-tree>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogEditMenuVisible = false">关 闭</el-button>
+        </div>
+    </el-dialog>
+
     <div class="block">
         <el-tree
                 ref="tree"
@@ -128,6 +145,10 @@
                 children: 'children',
                 label: 'label'
             },
+            editMenuDialogTitle:"关联菜单",
+            dialogEditMenuVisible:false,
+            defCheckedMenu:[],
+            datatreemenu:[],
             roleDialogTitle:"新增角色",
             roleUserDialogTitle:"角色关联列表",
             dialogRoleUserVisible:false,
@@ -164,6 +185,15 @@
                     this.treedata = res.data;
                 });
                 window.parent.app.loadingSwitch(false);
+            },
+            checkMenuChange(data, checkObj) {
+                var paramJson={"roleId":this.tmpDeptId,"menuId":data.id};
+                this.$http.post("/role/saverolemenu",paramJson).then(function(res) {
+                    if(res.data<=0)
+                    {
+                        alert("操作失败！");
+                    }
+                });
             },
             filterNode(value, data) {
                 if (!value) return true;
@@ -209,7 +239,18 @@
             },
             editMenu(data){
                 //关联菜单
-
+                this.dialogEditMenuVisible=true;
+                this.editMenuDialogTitle="【"+data.label+"】"+"关联菜单";
+                this.tmpDeptId=data.id;
+                window.parent.app.loadingSwitch(true);
+                //加载默认选中
+                this.$http.get("/role/rolemenu/"+data.id).then(function(res2) {
+                    this.defCheckedMenu = res2.data;
+                });
+                this.$http.get("/menu/childlist/0").then(function(res) {
+                    this.datatreemenu = res.data;
+                });
+                window.parent.app.loadingSwitch(false);
             },
             remove(node, data) {
                 //判断是否有子项

@@ -4,6 +4,7 @@ import com.fz.admin.core.DateCore;
 import com.fz.admin.dao.RoleDao;
 import com.fz.admin.entity.RoleDragEntity;
 import com.fz.admin.entity.RoleEntity;
+import com.fz.admin.entity.RoleMenuEntity;
 import com.fz.admin.entity.RoleTreeEntity;
 import com.fz.admin.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,23 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleEntity getRoleEntity(int id) {
         return roleDao.getRoleEntity(id);
+    }
+
+    @Override
+    public List<RoleMenuEntity> geRoleMenuList(int roleId) {
+        return roleDao.getRoleMenuList(roleId);
+    }
+
+    @Override
+    public int[] getRoleMenuIds(int roleId) {
+        List<RoleMenuEntity> rolemenuEntityList=roleDao.getRoleMenuList(roleId);
+        int[] ids=rolemenuEntityList.stream().mapToInt(RoleMenuEntity::getMenuId).toArray();
+        return ids;
+    }
+
+    @Override
+    public int addRoleMenu(RoleMenuEntity roleMenuEntity) {
+        return roleDao.addRoleMenu(roleMenuEntity);
     }
 
     @Override

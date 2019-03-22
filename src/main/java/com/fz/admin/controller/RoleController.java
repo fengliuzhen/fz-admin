@@ -3,6 +3,7 @@ package com.fz.admin.controller;
 import com.fz.admin.core.DateCore;
 import com.fz.admin.entity.RoleDragEntity;
 import com.fz.admin.entity.RoleEntity;
+import com.fz.admin.entity.RoleMenuEntity;
 import com.fz.admin.entity.RoleTreeEntity;
 import com.fz.admin.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,5 +99,20 @@ public class RoleController extends BaseController {
     public RoleEntity getRole(@PathVariable("id")int id)
     {
         return roleService.getRoleEntity(id);
+    }
+
+    @RequestMapping(value = "/rolemenu/{roleid}",method = RequestMethod.GET)
+    public int[] getRoleMenuIds(@PathVariable("roleid")int roleid)
+    {
+        return roleService.getRoleMenuIds(roleid);
+    }
+
+
+    @RequestMapping(value = "/saverolemenu",method = RequestMethod.POST,consumes="application/json")
+    public int editRoleMenu(@RequestBody RoleMenuEntity roleMenuEntity)
+    {
+        roleMenuEntity.setAddUid(getUserId());
+        roleMenuEntity.setAddTime(DateCore.getDateStamp());
+        return roleService.addRoleMenu(roleMenuEntity);
     }
 }

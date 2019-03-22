@@ -8,24 +8,221 @@
     <script type="application/javascript" th:src="@{~/element-ui/index.js}"></script>
     <script type="application/javascript" th:src="@{~/js/jquery-3.3.1.min.js}"></script>
     <title>菜单管理</title>
+    <style type="text/css">
+        .red{color:red;font-weight: normal;}
+        .green{color:green;font-weight: normal;}
+    </style>
 </head>
 <body>
 <div id="listPanel">
-    菜单列表
+    <el-dialog :title="addMenuDialogTitle" :visible.sync="addMenuDialog" :close-on-click-modal="false" @open="open()">
+        <el-form :model="formAdd" label-width="100px" size="small" :rules="addRules" ref="formAdd">
+            <el-form-item label="上级菜单" prop="parentId" id="formAddParentId">
+                <el-cascader
+                        :options="menOptions"
+                        v-model="formAdd.parentMenu"
+                        @change="handleItemChange">
+                </el-cascader>
+            </el-form-item>
+            <el-form-item label="名称" prop="menuName" id="formAddMenuName">
+                <el-input v-model.trim="formAdd.menuName" clearable placeholder="菜单名称"></el-input>
+            </el-form-item>
+            <el-form-item label="路径" prop="path" id="formAddMenuPath">
+                <el-input v-model.trim="formAdd.path" clearable placeholder="菜单路径"></el-input>
+            </el-form-item>
+            <el-form-item label="图标" prop="icon">
+                <el-input v-model.trim="formAdd.icon" :prefix-icon="icon_text" @change="TxtToIcon()" clearable placeholder="图标"></el-input>
+            </el-form-item>
+            <el-form-item label="序号" prop="orderNo">
+                <el-input v-model.trim="formAdd.orderNo" clearable placeholder="序号"></el-input>
+            </el-form-item>
+            <el-form-item label="类型" prop="showType">
+                <el-radio-group v-model="formAdd.showType">
+                    <el-radio :label="0">菜单</el-radio>
+                    <el-radio :label="1">功能</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="备注" prop="remark">
+                <el-input v-model.trim="formAdd.remark" clearable placeholder="备注"></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer" style="text-align:center;">
+            <el-button type="primary" icon="el-icon-success" @click="saveData('formAdd')">保存</el-button>
+            <el-button icon="el-icon-error" @click="resetInfo('formAdd')">取消</el-button>
+        </div>
+    </el-dialog>
+    <el-form :inline="true" :model="formSearch" class="demo-form-inline" size="mini">
+        <el-form-item label="菜单名称">
+            <el-input v-model.trim="formSearch.menuName" style="width:200px;" clearable placeholder="菜单名称"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="success" @click="onSubmit" icon="el-icon-search">检索</el-button>
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="showAddDialog()">添加菜单</el-button>
+        </el-form-item>
+    </el-form>
+    <el-table border :data="menuTableData" style="width: 100%">
+        <el-table-column prop="name" label="菜单名称" width="300">
+            <template slot-scope="scope">
+                <div @click="treeClick(scope.row,scope.$index)" style="cursor: pointer;">
+                    <template v-if="scope.row.childList && scope.row.childList.length > 0">
+                        <i class="el-icon-caret-bottom" :style="'margin-left:'+(scope.row.level-1)*2+'em;'" v-if="scope.row.open"></i>
+                        <i class="el-icon-caret-right" :style="'margin-left:'+(scope.row.level-1)*2+'em;'" v-else></i>
+                        <span >{{ scope.row.name }}</span>
+                    </template>
+                    <span v-else :style="'margin-left:'+(scope.row.level-1)*2+'em;'">{{ scope.row.name }}</span>
+                </div>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200">
+            <template slot-scope="scope">
+                <el-button type="primary" icon="el-icon-edit" plain size="mini"
+                           @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                <el-button type="danger" size="mini" icon="el-icon-delete" plain
+                           @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+            </template>
+        </el-table-column>
+        <el-table-column prop="id" label="ID"></el-table-column>
+        <el-table-column prop="orderno" label="排序号"></el-table-column>
+        <el-table-column prop="icon" label="图标" width="60">
+            <template slot-scope="scope">
+                <i :class="scope.row.icon"></i>
+                <!--<span>{{ scope.row.icon }}</span>-->
+            </template>
+        </el-table-column>
+        <el-table-column prop="path" label="路径" width="150"></el-table-column>
+        <el-table-column prop="showtype" label="类型">
+            <template slot-scope="scope">
+                <span class="red" v-if="scope.row.showtype==0"><b>菜单</b></span>
+                <span class="green" v-else-if="scope.row.showtype==1"><b>功能</b></span>
+            </template>
+        </el-table-column>
+        <el-table-column prop="addtime" label="添加时间"></el-table-column>
+    </el-table>
 </div>
 </body>
 </html>
 <script type="application/javascript">
+    var util = {};
+    util.treeTableXcode = function(data,xcode){
+        xcode = xcode || "";
+        for(var i=0;i<data.length;i++){
+            var item = data[i];
+            item.xcode = xcode + i;
+            if(item.childList && item.childList.length > 0){
+                util.treeTableXcode(item.childList,item.xcode+"-");
+            }
+        }
+    };
     var listApp=new Vue({
         el:"#listPanel",
         data:{
-
+            menuTableData:[],
+            selectedOptions:[],
+            menOptions:[],
+            addMenuDialogTitle:"新增菜单",
+            addMenuDialog:false,
+            tmpMenuId:0,
+            icon_text:"el-icon-caret-right",
+            formAdd:{
+                parentMenu:[],
+                menuName:"",
+                path:"",
+                icon:"",
+                orderNo:"1",
+                showType:"",
+                remark:""
+            },
+            addRules:{
+                menuName: [
+                    { required: true, message: '请填写菜单名称', trigger: 'blur' },
+                    { min: 2, max:20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+                ],
+                path: [
+                    { required: true, message: '请填写路径', trigger: 'blur' }
+                ],
+                showType: [
+                    { required: true, message: '请选择类型', trigger: 'change' }
+                ],
+                parentId:[{ required: true, message: '请选择上级菜单', trigger: 'change' }],
+                icon:[{ required: true, message: '请选择图标', trigger: 'blur' }]
+            },
+            formSearch:{
+                menuName:""
+            },
+            tableurl:"/menu/childtablelist/"
         },
         methods:{
-            loadListData:function () {
+            initList:function(){
+                this.$http.get(this.tableurl+"0").then(function(res) {
+                    var tmpTableData=res.data;
+                    util.treeTableXcode(tmpTableData);
+                    this.menuTableData =tmpTableData;
+                });
+            },
+            TxtToIcon:function(){
+                this.icon_text=this.formAdd.icon;
+            },
+            showAddDialog:function(){
+                this.addMenuDialog=true;
+                this.tmpMenuId=0;
+                this.$refs[formName].resetFields();
+            },
+            resetInfo:function(formName){
+                this.addMenuDialog = false;
+                this.$refs[formName].resetFields();
+            },
+            handleEdit(index, row) {
+                console.log(index, row);
+            },
+            handleDelete(index, row) {
+                console.log(index, row);
+            },
+            menuAdd: function() {
 
+            },
+            treeClick:function(item,index){
+                if(item.open){
+                    this.collapse(item,index);
+                }else{
+                    this.expand(item,index);
+                }
+            },
+            expand:function(item,index){
+                if(item.childList.length<=0){
+                    return index;
+                }
+                //展开
+                for(var i=0;item.childList && i<item.childList.length;i++){
+                    var child = item.childList[i];
+                    this.menuTableData.splice(++index,0,child);
+                    if(child.childList && child.childList.length > 0 && child.open){
+                        index = this.expand(child,index);
+                    }
+                }
+                item.open = true;
+                return index;
+            },
+            collapse:function(item,index){
+                if(item.childList.length<=0){
+                    return index;
+                }
+                //收缩
+                item.open = false;
+                var len = 0;
+                for(var i=index+1;i<this.menuTableData.length;i++){
+                    var xcode = this.menuTableData[i].xcode;
+                    if(xcode.indexOf(item.xcode+"-")==0){
+                        len ++;
+                    }else{
+                        break;
+                    }
+                }
+                this.menuTableData.splice(index+1,len);
+            },
+            handleItemChange:function (value) {
+                alert(value);
             }
         }
     });
-    listApp.loadListData();
+    listApp.initList();
 </script>

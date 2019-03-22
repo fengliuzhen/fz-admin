@@ -57,6 +57,12 @@ public class DeptController extends BaseController {
             return newId;
         }
     }
+
+    @RequestMapping(value = "/get/maxorderno/{parentid}",method = RequestMethod.GET)
+    public int getMaxOrderNo(@PathVariable("parentid")int pid)
+    {
+        return deptService.getDeptMaxOrderNo(pid);
+    }
     @RequestMapping(value = "/drag",method = RequestMethod.POST,consumes="application/json")
     public int DragDept(@RequestBody DeptDragEntity deptDragEntity)
     {

@@ -2,6 +2,7 @@ package com.fz.admin.dao;
 
 import com.fz.admin.entity.RoleDragEntity;
 import com.fz.admin.entity.RoleEntity;
+import com.fz.admin.entity.RoleMenuEntity;
 import com.fz.admin.entity.RoleTreeEntity;
 import org.apache.ibatis.annotations.Param;
 
@@ -27,4 +28,8 @@ public interface RoleDao {
 
     int updateDragRoleOrderNo(RoleDragEntity roleDragEntity);
     int updateDragOldRoleOrderNo(RoleDragEntity roleDragEntity);
+
+    List<RoleMenuEntity> getRoleMenuList(@Param("roleId")int roleId);
+
+    int addRoleMenu(RoleMenuEntity roleMenuEntity);
 }
