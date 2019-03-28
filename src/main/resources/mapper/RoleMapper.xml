@@ -20,7 +20,7 @@
     <insert id="addRoleMenu" parameterType="com.fz.admin.entity.RoleMenuEntity">
       INSERT INTO sys_role_menu(roleid,menuid,datastate,adduid,addtime)
       VALUES(#{roleId,jdbcType=INTEGER},#{menuId,jdbcType=INTEGER},1,#{addUid,jdbcType=INTEGER},#{addTime,jdbcType=INTEGER})
-      ON DUPLICATE KEY UPDATE datastate=ABS(datastate-1),adduid=#{addUid,jdbcType=INTEGER},addtime=#{addTime,jdbcType=INTEGER}
+      ON DUPLICATE KEY UPDATE datastate=#{dataState,jdbcType=INTEGER},adduid=#{addUid,jdbcType=INTEGER},addtime=#{addTime,jdbcType=INTEGER}
     </insert>
     <insert id="addRole" parameterType="com.fz.admin.entity.RoleEntity" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO sys_role(rolename,parentid,orderno,datastate,addtime,adduid,lastedittime,lastedituid,remark)

@@ -2,6 +2,7 @@ package com.fz.admin.serviceImpl;
 
 import com.fz.admin.dao.MenuDao;
 import com.fz.admin.entity.Menu;
+import com.fz.admin.entity.MenuEntity;
 import com.fz.admin.entity.MenuTableEntity;
 import com.fz.admin.entity.MenuTreeEntity;
 import com.fz.admin.service.MenuService;
@@ -39,13 +40,54 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public List<MenuTreeEntity> getMenuTreeList(int id) {
-        return getChildrenList(id);
+        //添加一级根目录
+        List<MenuTreeEntity> tmpList=new ArrayList<>();
+        MenuTreeEntity tmpModel=new MenuTreeEntity();
+        tmpModel.setLabel("根目录");
+        tmpModel.setValue("0");
+        tmpModel.setChildren(getChildrenList(id));
+        tmpList.add(tmpModel);
+        return tmpList;
     }
 
     @Override
     public List<MenuTableEntity> getMenuListByPid(int pid) {
         return getMenuChildrenList(pid,1);
     }
+
+    @Override
+    public MenuEntity getMenuModelById(int id) {
+        return menuDao.getMenuModelById(id);
+    }
+
+    @Override
+    public MenuEntity getMenuModelByPidName(int parentId, String menuName) {
+        Map<String,Object> paramMap=new HashMap<>();
+        paramMap.put("parentId",parentId);
+        paramMap.put("menuName",menuName);
+        return menuDao.getMenuModelByPidName(paramMap);
+    }
+
+    @Override
+    public int getMaxOrderNo(int parentId) {
+        return menuDao.getMaxOrderNo(parentId);
+    }
+
+    @Override
+    public int addMenu(MenuEntity menuEntity) {
+        return menuDao.addMenu(menuEntity);
+    }
+
+    @Override
+    public int updateMenu(MenuEntity menuEntity) {
+        return menuDao.updateMenu(menuEntity);
+    }
+
+    @Override
+    public int updateState(MenuEntity menuEntity) {
+        return menuDao.updateState(menuEntity);
+    }
+
     private List<MenuTableEntity> getMenuChildrenList(int parentId,int level)
     {
         List<MenuTableEntity> tmpList=menuDao.getMenuListByPid(parentId);

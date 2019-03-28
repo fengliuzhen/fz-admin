@@ -186,8 +186,13 @@
                 });
                 window.parent.app.loadingSwitch(false);
             },
-            checkMenuChange(data, checkObj) {
-                var paramJson={"roleId":this.tmpDeptId,"menuId":data.id};
+            checkMenuChange(data,checkObj) {
+                var tmpDataState=0;
+                if(checkObj.checkedKeys.indexOf(data.id)>-1)
+                {
+                    tmpDataState=1;
+                }
+                var paramJson={"roleId":this.tmpDeptId,"menuId":data.id,"dataState":tmpDataState};
                 this.$http.post("/role/saverolemenu",paramJson).then(function(res) {
                     if(res.data<=0)
                     {

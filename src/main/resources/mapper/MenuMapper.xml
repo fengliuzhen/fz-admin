@@ -2,6 +2,22 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.fz.admin.dao.MenuDao">
+    <resultMap id="menuEntityMap" type="com.fz.admin.entity.MenuEntity">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="menuname" property="name" jdbcType="VARCHAR" />
+        <result column="parentid" property="pid" jdbcType="INTEGER" />
+        <result column="parentids" property="pids" jdbcType="VARCHAR" />
+        <result column="icon" property="icon" jdbcType="VARCHAR" />
+        <result column="path" property="path" jdbcType="VARCHAR" />
+        <result column="orderno" property="orderno" jdbcType="INTEGER" />
+        <result column="showtype" property="showtype" jdbcType="INTEGER" />
+        <result column="datastate" property="datastate" jdbcType="INTEGER" />
+        <result column="addtime" property="addtime" jdbcType="INTEGER" />
+        <result column="adduid" property="adduid" jdbcType="INTEGER" />
+        <result column="lastedittime" property="lastedittime" jdbcType="INTEGER" />
+        <result column="lastedituid" property="lastedituid" jdbcType="INTEGER" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+    </resultMap>
     <select id="getMenuListByUid"  resultType="com.fz.admin.entity.Menu" parameterType="java.lang.Integer">
         SELECT sm.id,sm.menuname name,sm.parentid pid,sm.icon,sm.path url FROM sys_user_role sur LEFT JOIN sys_role sr ON sur.roleid=sr.id
   LEFT JOIN sys_role_menu srm ON sr.id=srm.roleid
@@ -16,9 +32,55 @@ AND sm.showtype=0 AND sur.userid=#{uid,jdbcType=INTEGER} GROUP BY sm.id ORDER BY
   AND sur.userid=#{userId,jdbcType=INTEGER} AND sm.path=#{menuPath,jdbcType=VARCHAR};
     </select>
     <select id="getMenuTreeList"  resultType="com.fz.admin.entity.MenuTreeEntity" parameterType="java.lang.Integer">
-        SELECT id,sm.menuname label FROM sys_menu sm WHERE sm.parentid=#{id} AND sm.datastate=1 ORDER BY sm.orderno
+        SELECT id,id value,sm.menuname label FROM sys_menu sm WHERE sm.parentid=#{id} AND sm.datastate=1 ORDER BY sm.orderno
     </select>
     <select id="getMenuListByPid" parameterType="java.lang.Integer" resultType="com.fz.admin.entity.MenuTableEntity">
         SELECT id,sm.menuname name,sm.parentid pid,sm.icon,sm.path,sm.orderno,sm.showtype,sm.addtime FROM sys_menu sm WHERE sm.parentid=#{pid}
     </select>
+    <select id="getMenuModelById" resultMap="menuEntityMap" parameterType="java.lang.Integer">
+      SELECT * FROM sys_menu sm WHERE sm.id=#{id,jdbcType=INTEGER};
+    </select>
+    <select id="getMenuModelByPidName" resultMap="menuEntityMap" parameterType="java.util.Map">
+      SELECT * FROM sys_menu sm WHERE sm.parentid=#{parentId,jdbcType=INTEGER} AND sm.menuname=#{menuName,jdbcType=VARCHAR};
+    </select>
+    <select id="getMaxOrderNo"  resultType="java.lang.Integer" parameterType="java.lang.Integer">
+        SELECT IFNULL(max(sm.orderno),1) FROM sys_menu sm WHERE sm.parentid=#{parentId,jdbcType=INTEGER}
+    </select>
+    <insert id="addMenu" parameterType="com.fz.admin.entity.MenuEntity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sys_menu(menuname,parentid,parentids,icon,path,orderno,showtype,datastate,addtime,adduid,lastedittime,lastedituid,remark)
+        values(#{name,jdbcType=VARCHAR},#{pid,jdbcType=INTEGER},#{pids,jdbcType=INTEGER},#{icon,jdbcType=VARCHAR},#{path,jdbcType=VARCHAR},#{orderno,jdbcType=INTEGER},#{showtype,jdbcType=INTEGER},1,#{addtime,jdbcType=INTEGER},#{adduid,jdbcType=INTEGER},#{lastedittime,jdbcType=INTEGER},#{lastedituid,jdbcType=INTEGER},#{remark,jdbcType=VARCHAR});
+    </insert>
+    <update id="updateMenu" parameterType="com.fz.admin.entity.MenuEntity">
+        UPDATE sys_menu sm
+        <set>
+            <if test="name!=null and name!=''">
+                sm.menuname=#{name,jdbcType=VARCHAR},
+            </if>
+            <if test="icon!=null and icon!=''">
+                sm.icon=#{icon,jdbcType=VARCHAR},
+            </if>
+            <if test="path!=null and path!=''">
+                sm.path=#{path,jdbcType=VARCHAR},
+            </if>
+            <if test="orderno!=null and orderno>-1">
+                sm.orderno=#{orderno,jdbcType=INTEGER},
+            </if>
+            <if test="showtype!=null and showtype>-1">
+                sm.showtype=#{showtype,jdbcType=INTEGER},
+            </if>
+            <if test="lastedittime!=null and lastedittime>0">
+                sm.lastedittime=#{lastedittime,jdbcType=INTEGER},
+            </if>
+            <if test="lastedituid!=null and lastedituid>0">
+                sm.lastedituid=#{adduid,jdbcType=INTEGER},
+            </if>
+            <if test="remark!=null">
+                sm.remark=#{remark,jdbcType=VARCHAR},
+            </if>
+        </set>
+        WHERE sm.id=#{id,jdbcType=INTEGER};
+    </update>
+    <update id="updateState" parameterType="com.fz.admin.entity.MenuEntity">
+        UPDATE sys_menu sm SET sm.datastate=#{datastate,jdbcType=INTEGER},sm.lastedittime=#{lastedittime,jdbcType=INTEGER},sm.lastedituid=#{adduid,jdbcType=INTEGER} WHERE sm.id=#{id,jdbcType=INTEGER};
+    </update>
 </mapper>

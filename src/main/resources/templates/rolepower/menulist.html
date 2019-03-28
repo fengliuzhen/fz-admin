@@ -15,13 +15,17 @@
 </head>
 <body>
 <div id="listPanel">
-    <el-dialog :title="addMenuDialogTitle" :visible.sync="addMenuDialog" :close-on-click-modal="false" @open="open()">
+    <el-dialog :title="addMenuDialogTitle" :visible.sync="addMenuDialog" :close-on-click-modal="false">
         <el-form :model="formAdd" label-width="100px" size="small" :rules="addRules" ref="formAdd">
-            <el-form-item label="上级菜单" prop="parentId" id="formAddParentId">
+            <el-form-item label="上级菜单" prop="parentMenu" id="formAddParentId">
                 <el-cascader
                         :options="menOptions"
+                        filterable="true"
+                        :show-all-levels="false"
                         v-model="formAdd.parentMenu"
-                        @change="handleItemChange">
+                        placeholder="选择上级菜单"
+                        @change="handleItemChange"
+                        change-on-select>
                 </el-cascader>
             </el-form-item>
             <el-form-item label="名称" prop="menuName" id="formAddMenuName">
@@ -31,16 +35,21 @@
                 <el-input v-model.trim="formAdd.path" clearable placeholder="菜单路径"></el-input>
             </el-form-item>
             <el-form-item label="图标" prop="icon">
-                <el-input v-model.trim="formAdd.icon" :prefix-icon="icon_text" @change="TxtToIcon()" clearable placeholder="图标"></el-input>
-            </el-form-item>
-            <el-form-item label="序号" prop="orderNo">
-                <el-input v-model.trim="formAdd.orderNo" clearable placeholder="序号"></el-input>
+                <el-select v-model="formAdd.icon" clearable filterable placeholder="el-icon-caret-right">
+                    <el-option v-for="item in iconList" :key="item.iconName" :label="item.iconName" :value="item.iconName" >
+                        <i :class="item.iconName"></i>
+                        <span>{{ item.iconName }}</span>
+                    </el-option>
+                </el-select>
             </el-form-item>
             <el-form-item label="类型" prop="showType">
                 <el-radio-group v-model="formAdd.showType">
                     <el-radio :label="0">菜单</el-radio>
                     <el-radio :label="1">功能</el-radio>
                 </el-radio-group>
+            </el-form-item>
+            <el-form-item label="序号" prop="orderNo">
+                <el-input v-model.trim="formAdd.orderNo" style="width:190px" clearable placeholder="序号"></el-input>
             </el-form-item>
             <el-form-item label="备注" prop="remark">
                 <el-input v-model.trim="formAdd.remark" clearable placeholder="备注"></el-input>
@@ -57,7 +66,7 @@
         </el-form-item>
         <el-form-item>
             <el-button type="success" @click="onSubmit" icon="el-icon-search">检索</el-button>
-            <el-button type="primary" icon="el-icon-plus" size="mini" @click="showAddDialog()">添加菜单</el-button>
+            <el-button type="primary" icon="el-icon-plus" size="mini" @click="showAddDialog('formAdd')">添加菜单</el-button>
         </el-form-item>
     </el-form>
     <el-table border :data="menuTableData" style="width: 100%">
@@ -122,7 +131,17 @@
             addMenuDialogTitle:"新增菜单",
             addMenuDialog:false,
             tmpMenuId:0,
-            icon_text:"el-icon-caret-right",
+            iconList:[
+                {iconName:"el-icon-menu"},
+                {iconName:"el-icon-caret-right"},
+                {iconName:"el-icon-tickets"},
+                {iconName:"el-icon-date"},
+                {iconName:"el-icon-picture-outline"},
+                {iconName:"el-icon-news"},
+                {iconName:"el-icon-message"},
+                {iconName:"el-icon-star-off"},
+                {iconName:"el-icon-setting"}
+                ],
             formAdd:{
                 parentMenu:[],
                 menuName:"",
@@ -143,13 +162,14 @@
                 showType: [
                     { required: true, message: '请选择类型', trigger: 'change' }
                 ],
-                parentId:[{ required: true, message: '请选择上级菜单', trigger: 'change' }],
+                parentMenu:[{ required: true, message: '请选择上级菜单', trigger: 'change' }],
                 icon:[{ required: true, message: '请选择图标', trigger: 'blur' }]
             },
             formSearch:{
                 menuName:""
             },
-            tableurl:"/menu/childtablelist/"
+            tableurl:"/menu/childtablelist/",
+            treeurl:"/menu/childlist/"
         },
         methods:{
             initList:function(){
@@ -159,12 +179,14 @@
                     this.menuTableData =tmpTableData;
                 });
             },
-            TxtToIcon:function(){
-                this.icon_text=this.formAdd.icon;
-            },
-            showAddDialog:function(){
+            showAddDialog(formName){
                 this.addMenuDialog=true;
+                this.addMenuDialogTitle="新增菜单";
                 this.tmpMenuId=0;
+                //菜单下拉数据
+                this.$http.get(this.treeurl+"0").then(function(res) {
+                    this.menOptions =res.data;
+                });
                 this.$refs[formName].resetFields();
             },
             resetInfo:function(formName){
@@ -172,15 +194,145 @@
                 this.$refs[formName].resetFields();
             },
             handleEdit(index, row) {
-                console.log(index, row);
+                this.tmpMenuId=row.id;
+                this.addMenuDialogTitle="编辑菜单";
+                //菜单下拉数据
+                this.$http.get(this.treeurl+"0").then(function(res) {
+                    this.menOptions =res.data;
+                });
+                //获取菜单数据
+                this.$http.get("/menu/get/"+row.id).then(function(res2){
+                    this.addMenuDialog=true;
+                    this.formAdd.menuName=res2.data.name;
+                    var tmpChkArray=new Array();
+                    if(res2.data.pids!=null&&res2.data.pids!='')
+                    {
+                        if(res2.data.pids.indexOf(",")>0)
+                        {
+                            var tmpOldArray=res2.data.pids.split(",");
+                            for(var tmpItem in tmpOldArray)
+                            {
+                                tmpChkArray.push(tmpOldArray[tmpItem].toString());
+                            }
+                        }
+                        else
+                        {
+                            tmpChkArray.push(res2.data.pids.toString());
+                        }
+                    }
+                    this.formAdd.parentMenu=tmpChkArray;
+                    this.formAdd.icon=res2.data.icon;
+                    this.formAdd.path=res2.data.path;
+                    this.formAdd.orderNo=res2.data.orderno;
+                    this.formAdd.showType=res2.data.showtype;
+                    this.formAdd.remark=res2.data.remark;
+                },function(){
+                    alert("同步失败！");
+                });
             },
             handleDelete(index, row) {
-                console.log(index, row);
+                //判断是否有子项
+                if(row.children.length>0)
+                {
+                    alert("请先删除子项!");
+                }
+                else
+                {
+                    this.$http.get("/menu/del/"+row.id).then(function(res2){
+                        window.parent.app.loadingSwitch(false);
+                        if(res2.data>0) {
+                            alert("操作成功");
+                            this.initList();
+                        }
+                        else
+                        {
+                            alert("操作失败");
+                        }
+                    },function(){
+                        alert("同步失败！");
+                        window.parent.app.loadingSwitch(false);
+                    });
+                }
             },
-            menuAdd: function() {
-
+            handleItemChange(selValue){
+                if(selValue==0||selValue=="0")
+                {
+                    this.formAdd.orderNo=1;
+                    return;
+                }
+                //获取最大排序号
+                var tmpSelId=0;
+                if(selValue.toString().indexOf(",")>-1) {
+                    var tmpSelArray=selValue.toString().split(",");
+                    tmpSelId=tmpSelArray[tmpSelArray.length-1];
+                }
+                else
+                {
+                    tmpSelId=selValue;
+                }
+                this.$http.get("/menu/get/maxorderno/" + tmpSelId).then(function (res2) {
+                    this.formAdd.orderNo = res2.data + 1;
+                }, function () {
+                    alert("同步失败！");
+                });
             },
-            treeClick:function(item,index){
+            saveData(formName) {
+                var isValidPass=true;
+                if(this.tmpMenuId>0)
+                {
+                    //this.addRules.passWord[0].required=false;
+                }
+                this.$refs[formName].validate(function (valid) {
+                    isValidPass=valid;
+                    if(!valid)
+                    {
+                        return false;
+                    }
+                });
+                if(!isValidPass)
+                {
+                    return false;
+                }
+                //验证通过
+                var parentIds=this.formAdd.parentMenu;
+                alert(parentIds);
+                var parentIdArray=parentIds.toString().split(",");
+                var tmpPid=parentIdArray[parentIdArray.length-1];
+                var addJson={
+                    id:this.tmpMenuId,
+                    name:this.formAdd.menuName,
+                    pid:tmpPid,
+                    pids:parentIds.toString(),
+                    icon:this.formAdd.icon,
+                    path:this.formAdd.path,
+                    orderno:this.formAdd.orderNo,
+                    showtype:this.formAdd.showType,
+                    remark:this.formAdd.remark
+                };
+                //提交数据
+                this.$http.post("/menu/save",addJson).then(function(res2){
+                    window.parent.app.loadingSwitch(false);
+                    if(res2.data>0) {
+                        this.$refs[formName].resetFields();
+                        this.addMenuDialog=false;
+                        alert("操作成功");
+                        //刷新数据
+                        this.initList();
+                    }
+                    else if(res2.data<0)
+                    {
+                        alert("当前节点下已存在【"+this.formAdd.menuName+"】");
+                    }
+                    else
+                    {
+                        alert("操作失败");
+                    }
+                },function(){
+                    alert("同步失败！");
+                    window.parent.app.loadingSwitch(false);
+                });
+            },
+            treeClick(item,index){
                 if(item.open){
                     this.collapse(item,index);
                 }else{
@@ -218,9 +370,6 @@
                     }
                 }
                 this.menuTableData.splice(index+1,len);
-            },
-            handleItemChange:function (value) {
-                alert(value);
             }
         }
     });
