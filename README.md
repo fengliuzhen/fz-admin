@@ -139,11 +139,6 @@ CHARACTER SET utf8,
 COLLATE utf8_general_ci,
 COMMENT = '部门岗位关联表';
 
---
--- Create index `UK_sys_dept_post` on table `sys_dept_post`
---
-ALTER TABLE sys_dept_post
-ADD UNIQUE INDEX UK_sys_dept_post (deptid, postid);
 
 --
 -- Create table `sys_department`
